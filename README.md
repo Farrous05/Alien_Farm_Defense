@@ -18,7 +18,7 @@ Le projet suit une architecture **MVC** (Modèle-Vue-Contrôleur) :
 src/main/java/com/fermedefense/
 ├── Main.java
 ├── modele/
-│   ├── joueur/       # Fermier, inventaire, actions
+│   ├── joueur/       # Fermier, actions
 │   ├── ferme/        # Vaches, croissance, ferme
 │   ├── marche/       # Boutique, articles
 │   ├── combat/       # Extraterrestres, armes, boss
