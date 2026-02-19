@@ -1,7 +1,11 @@
 package com.fermedefense.modele.joueur;
 
 /**
- * Représente une action en cours du joueur (acheter, vendre, défendre, se déplacer).
+ * Directions de déplacement du joueur.
  */
-public class Action {
+public enum Action {
+    HAUT,
+    BAS,
+    GAUCHE,
+    DROITE
 }

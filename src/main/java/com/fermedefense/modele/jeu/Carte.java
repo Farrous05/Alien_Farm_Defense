@@ -74,4 +74,16 @@ public class Carte {
     public int[] getZoneMarche() {
         return zoneMarche;
     }
+
+    /**
+     * Contraint la position d'un joueur dans les limites de la carte.
+     *
+     * @param joueur le joueur à contraindre
+     */
+    public void clampJoueur(com.fermedefense.modele.joueur.Joueur joueur) {
+        double x = Math.max(0, Math.min(largeur - joueur.getTaille(), joueur.getX()));
+        double y = Math.max(0, Math.min(hauteur - joueur.getTaille(), joueur.getY()));
+        joueur.setX(x);
+        joueur.setY(y);
+    }
 }
