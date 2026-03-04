@@ -1,9 +1,13 @@
 package com.fermedefense.modele.combat;
 
 /**
- * Résultat d'un combat (victoire ou défaite).
+ * Résultat d'un combat.
  */
 public enum ResultatCombat {
+    /** Tous les aliens sont morts, joueur encore en vie. */
     VICTOIRE,
-    DEFAITE
+    /** Le joueur est mort (PV ≤ 0). */
+    DEFAITE,
+    /** Le combat est encore en cours. */
+    EN_COURS
 }

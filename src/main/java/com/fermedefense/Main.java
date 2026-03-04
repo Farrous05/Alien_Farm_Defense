@@ -1,10 +1,35 @@
 package com.fermedefense;
 
+import javax.swing.SwingUtilities;
+
+import com.fermedefense.modele.ferme.Ferme;
+import com.fermedefense.modele.jeu.Carte;
+import com.fermedefense.modele.joueur.Joueur;
+import com.fermedefense.modele.marche.Marche;
+import com.fermedefense.utilitaire.Constantes;
+import com.fermedefense.vue.VuePrincipale;
+
 /**
  * Point d'entrée principal du jeu Alien Farm Defense.
  */
 public class Main {
     public static void main(String[] args) {
-        // TODO: Initialiser le jeu
+        SwingUtilities.invokeLater(() -> {
+            // Modèle
+            Carte carte = new Carte(Constantes.LARGEUR_CARTE, Constantes.HAUTEUR_CARTE);
+            Joueur joueur = new Joueur(
+                    carte.getCentreZone(com.fermedefense.modele.jeu.Zone.FERME)[0],
+                    carte.getCentreZone(com.fermedefense.modele.jeu.Zone.FERME)[1],
+                    Constantes.VITESSE_JOUEUR,
+                    Constantes.PV_MAX_JOUEUR,
+                    Constantes.MONNAIE_INIT
+            );
+            Ferme ferme = new Ferme();
+            Marche marche = new Marche();
+
+            // Vue + lancement
+            VuePrincipale vue = new VuePrincipale(joueur, ferme, carte, marche);
+            vue.lancer();
+        });
     }
 }
