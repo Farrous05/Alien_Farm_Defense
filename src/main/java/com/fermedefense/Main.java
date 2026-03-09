@@ -4,6 +4,7 @@ import javax.swing.SwingUtilities;
 
 import com.fermedefense.modele.ferme.Ferme;
 import com.fermedefense.modele.jeu.Carte;
+import com.fermedefense.modele.jeu.Partie;
 import com.fermedefense.modele.joueur.Joueur;
 import com.fermedefense.modele.marche.Marche;
 import com.fermedefense.utilitaire.Constantes;
@@ -27,8 +28,15 @@ public class Main {
             Ferme ferme = new Ferme();
             Marche marche = new Marche();
 
+            // Partie (progression)
+            Partie partie = new Partie(
+                    Constantes.LARGEUR_CARTE, Constantes.HAUTEUR_CARTE,
+                    Constantes.TEMPS_NIVEAU_MS,
+                    Constantes.MONNAIE_INIT
+            );
+
             // Vue + lancement
-            VuePrincipale vue = new VuePrincipale(joueur, ferme, carte, marche);
+            VuePrincipale vue = new VuePrincipale(joueur, ferme, carte, marche, partie);
             vue.lancer();
         });
     }

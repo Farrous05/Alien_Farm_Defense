@@ -1,78 +1,182 @@
 package com.fermedefense.controleur;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import com.fermedefense.modele.combat.AlienVisuel;
 import com.fermedefense.modele.combat.Arme;
 import com.fermedefense.modele.combat.Attaque;
 import com.fermedefense.modele.combat.Extraterrestre;
 import com.fermedefense.modele.combat.ResultatCombat;
+import com.fermedefense.modele.ferme.Ferme;
+import com.fermedefense.modele.ferme.Vache;
 import com.fermedefense.modele.joueur.Joueur;
 import com.fermedefense.modele.progression.Niveau;
 
 /**
  * Gère les attaques extraterrestres intermédiaires.
  *
- * Quand la BarreProgression déclenche un événement ATTAQUE_INTERMEDIAIRE,
- * le ControleurJeu crée ou délègue à ce contrôleur. Il :
- *   1. Génère la vague d'aliens via le Niveau
- *   2. Fait tourner l'Attaque tick par tick
- *   3. Signale quand la vague est terminée (victoire ou défaite)
- *
- * Pendant une attaque en cours, le jeu continue de tourner
- * (la ferme produit, le joueur se déplace) mais la barre
- * de progression est en pause.
+ * Cycle visuel d'une vague :
+ *   INACTIF → APPROCHE (aliens marchent vers la ferme, ~2s)
+ *           → COMBAT  (combat automatique, overlay + aliens visibles)
+ *           → DEPART  (aliens fuient ou enlèvent une vache, ~1.5s)
+ *           → INACTIF
  */
 public class ControleurAttaque {
 
+    /** Phase de l'attaque en cours. */
+    public enum PhaseAttaque {
+        INACTIF,
+        APPROCHE,
+        COMBAT,
+        DEPART
+    }
+
     private final Niveau niveau;
     private final Arme arme;
+    private final Ferme ferme;
     private Attaque attaqueCourante;
-    private boolean actif;
+    private PhaseAttaque phase;
     private int vaguesTerminees;
+    private Vache derniereVacheEnlevee;
 
-    public ControleurAttaque(Niveau niveau, Arme arme) {
+    /** Aliens visuels affichés sur la carte. */
+    private List<AlienVisuel> aliensVisuels;
+
+    /** Coordonnées de la zone ferme pour positionner les aliens. */
+    private int fermeX, fermeY, fermeW, fermeH;
+
+    /** Vitesse visuelle des aliens (pixels/sec). */
+    private static final double VITESSE_ALIEN_VISUEL = 250;
+
+    public ControleurAttaque(Niveau niveau, Arme arme, Ferme ferme) {
         this.niveau = niveau;
         this.arme = arme;
+        this.ferme = ferme;
         this.attaqueCourante = null;
-        this.actif = false;
+        this.phase = PhaseAttaque.INACTIF;
         this.vaguesTerminees = 0;
+        this.derniereVacheEnlevee = null;
+        this.aliensVisuels = Collections.emptyList();
+    }
+
+    /**
+     * Définit les dimensions de la zone ferme (pour positionner les aliens).
+     */
+    public void setZoneFerme(int x, int y, int w, int h) {
+        this.fermeX = x;
+        this.fermeY = y;
+        this.fermeW = w;
+        this.fermeH = h;
     }
 
     /**
      * Déclenche une vague d'attaque intermédiaire.
+     * Commence par la phase d'approche.
      *
      * @param indexVague index de la vague (0-based)
      */
     public void declencherVague(int indexVague) {
         List<Extraterrestre> aliens = niveau.creerVague(indexVague);
         attaqueCourante = new Attaque(aliens);
-        actif = true;
+        derniereVacheEnlevee = null;
+
+        // Créer les aliens visuels : départ à droite, cible dans la ferme
+        aliensVisuels = new ArrayList<>();
+        int departX = fermeX + fermeW + 100; // hors écran à droite
+        for (int i = 0; i < aliens.size(); i++) {
+            double cibleX = fermeX + 40 + (i % 3) * 60;
+            double cibleY = fermeY + 60 + (i / 3) * 50 + (i % 2) * 20;
+            double departY = cibleY + (Math.random() - 0.5) * 40;
+            aliensVisuels.add(new AlienVisuel(departX + i * 30, departY,
+                    cibleX, cibleY, VITESSE_ALIEN_VISUEL));
+        }
+
+        phase = PhaseAttaque.APPROCHE;
     }
 
     /**
-     * Met à jour le combat en cours.
+     * Met à jour la vague en cours (approche, combat, ou départ).
      *
      * @param deltaMs temps écoulé
      * @param joueur  le joueur
      */
     public void mettreAJour(long deltaMs, Joueur joueur) {
-        if (!actif || attaqueCourante == null) return;
+        if (phase == PhaseAttaque.INACTIF) return;
 
-        attaqueCourante.mettreAJour(deltaMs, joueur, arme);
+        switch (phase) {
+            case APPROCHE:
+                boolean tousArrives = true;
+                for (AlienVisuel av : aliensVisuels) {
+                    if (!av.mettreAJour(deltaMs)) {
+                        tousArrives = false;
+                    }
+                }
+                if (tousArrives) {
+                    // Transition vers le combat
+                    phase = PhaseAttaque.COMBAT;
+                    for (AlienVisuel av : aliensVisuels) {
+                        av.setEtat(AlienVisuel.EtatVisuel.COMBAT);
+                    }
+                }
+                break;
 
-        if (attaqueCourante.isTerminee()) {
-            actif = false;
-            if (attaqueCourante.getResultat() == ResultatCombat.VICTOIRE) {
-                vaguesTerminees++;
-            }
+            case COMBAT:
+                // Faire avancer le combat automatique
+                attaqueCourante.mettreAJour(deltaMs, joueur, arme);
+                // Animer les aliens visuels (tremblements)
+                for (AlienVisuel av : aliensVisuels) {
+                    av.mettreAJour(deltaMs);
+                }
+                if (attaqueCourante.isTerminee()) {
+                    // Transition vers le départ
+                    phase = PhaseAttaque.DEPART;
+                    if (attaqueCourante.getResultat() == ResultatCombat.VICTOIRE) {
+                        vaguesTerminees++;
+                        derniereVacheEnlevee = null;
+                        for (AlienVisuel av : aliensVisuels) {
+                            av.setEtat(AlienVisuel.EtatVisuel.FUITE);
+                        }
+                    } else {
+                        derniereVacheEnlevee = ferme.enleverDerniereVache();
+                        for (AlienVisuel av : aliensVisuels) {
+                            av.setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
+                        }
+                    }
+                }
+                break;
+
+            case DEPART:
+                boolean tousSortis = true;
+                for (AlienVisuel av : aliensVisuels) {
+                    if (!av.mettreAJour(deltaMs)) {
+                        tousSortis = false;
+                    }
+                }
+                if (tousSortis) {
+                    phase = PhaseAttaque.INACTIF;
+                    aliensVisuels = Collections.emptyList();
+                }
+                break;
+
+            default:
+                break;
         }
     }
 
     /**
-     * Vérifie si une attaque est en cours.
+     * Vérifie si une attaque est encore visible (approche, combat, ou départ).
      */
     public boolean isActif() {
-        return actif;
+        return phase != PhaseAttaque.INACTIF;
+    }
+
+    /**
+     * Vérifie si le combat proprement dit est en cours (pour l'overlay).
+     */
+    public boolean isEnCombat() {
+        return phase == PhaseAttaque.COMBAT;
     }
 
     /**
@@ -85,4 +189,7 @@ public class ControleurAttaque {
 
     public Attaque getAttaqueCourante() { return attaqueCourante; }
     public int getVaguesTerminees() { return vaguesTerminees; }
+    public Vache getDerniereVacheEnlevee() { return derniereVacheEnlevee; }
+    public PhaseAttaque getPhase() { return phase; }
+    public List<AlienVisuel> getAliensVisuels() { return aliensVisuels; }
 }

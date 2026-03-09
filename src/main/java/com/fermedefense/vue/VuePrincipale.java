@@ -14,21 +14,27 @@ import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import com.fermedefense.controleur.ControleurAttaque;
+import com.fermedefense.controleur.ControleurCombat;
 import com.fermedefense.controleur.ControleurJeu;
 import com.fermedefense.controleur.ControleurJoueur;
+import com.fermedefense.controleur.ControleurMarche;
+import com.fermedefense.modele.combat.Attaque;
 import com.fermedefense.modele.ferme.Ferme;
-import com.fermedefense.modele.ferme.Vache;
 import com.fermedefense.modele.jeu.Carte;
+import com.fermedefense.modele.jeu.EtatJeu;
+import com.fermedefense.modele.jeu.Partie;
 import com.fermedefense.modele.jeu.Zone;
+import com.fermedefense.modele.joueur.ActionDuree;
 import com.fermedefense.modele.joueur.Joueur;
-import com.fermedefense.modele.marche.ArticleMarche;
 import com.fermedefense.modele.marche.Marche;
-import com.fermedefense.modele.marche.TypeArticle;
+import com.fermedefense.modele.progression.BarreProgression;
 import com.fermedefense.utilitaire.Constantes;
 
 /**
  * Fenêtre principale du jeu.
- * Contient le panneau de jeu (carte + joueur) et le HUD.
+ * Contient le panneau de jeu (carte + joueur), le HUD,
+ * la barre de progression, et les overlays de combat.
  */
 public class VuePrincipale extends JFrame {
 
@@ -36,29 +42,45 @@ public class VuePrincipale extends JFrame {
     private final Ferme ferme;
     private final Carte carte;
     private final Marche marche;
+    private final Partie partie;
 
     private final VueHUD vueHUD;
     private final VueFerme vueFerme;
     private final VueMarche vueMarche;
+    private final VueBarreProgression vueBarreProgression;
+    private final VueCombat vueCombat;
+    private final VueActionJoueur vueActionJoueur;
+    private final VueAliens vueAliens;
     private final PanneauJeu panneauJeu;
 
     private final ControleurJeu controleurJeu;
+    private final ControleurMarche controleurMarche;
+
+    /** Durée de l'action de récolte (ms). */
+    private static final long DUREE_RECOLTE = 2000;
+    /** Durée de l'action d'achat (ms). */
+    private static final long DUREE_ACHAT = 1500;
 
     /** Message temporaire affiché à l'écran. */
     private String messageFlash = null;
     private long messageFlashExpire = 0;
 
-    public VuePrincipale(Joueur joueur, Ferme ferme, Carte carte, Marche marche) {
+    public VuePrincipale(Joueur joueur, Ferme ferme, Carte carte, Marche marche, Partie partie) {
         super(Constantes.TITRE_FENETRE);
         this.joueur = joueur;
         this.ferme = ferme;
         this.carte = carte;
         this.marche = marche;
+        this.partie = partie;
 
         // Vues
         this.vueFerme = new VueFerme(ferme);
         this.vueMarche = new VueMarche(marche);
         this.vueHUD = new VueHUD(joueur, ferme);
+        this.vueBarreProgression = new VueBarreProgression();
+        this.vueCombat = new VueCombat();
+        this.vueActionJoueur = new VueActionJoueur();
+        this.vueAliens = new VueAliens();
         this.panneauJeu = new PanneauJeu();
 
         // Layout
@@ -72,6 +94,7 @@ public class VuePrincipale extends JFrame {
         panneauJeu.addKeyListener(new ActionKeyListener());
 
         controleurJeu = new ControleurJeu(joueur, ferme, carte, panneauJeu);
+        controleurMarche = new ControleurMarche(joueur, ferme, marche, carte, controleurJeu);
 
         // Fenêtre
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -82,9 +105,11 @@ public class VuePrincipale extends JFrame {
         panneauJeu.requestFocusInWindow();
     }
 
-    /** Démarre le jeu. */
+    /** Démarre le jeu : initialise le niveau et lance la boucle. */
     public void lancer() {
         setVisible(true);
+        partie.demarrer();
+        controleurJeu.initialiserNiveau(partie);
         controleurJeu.demarrer();
     }
 
@@ -94,7 +119,7 @@ public class VuePrincipale extends JFrame {
     }
 
     // ─────────────────────────────────────────────
-    // Panneau de jeu (dessine carte + joueur)
+    // Panneau de jeu (dessine carte + joueur + progression + combat)
     // ─────────────────────────────────────────────
     private class PanneauJeu extends JPanel {
 
@@ -130,12 +155,55 @@ public class VuePrincipale extends JFrame {
             g2.setFont(new Font("SansSerif", Font.BOLD, 10));
             g2.drawString("J", jx + 10, jy + 20);
 
+            // Action progress bar above player
+            ActionDuree action = controleurJeu.getActionEnCours();
+            vueActionJoueur.dessiner(g2, action, jx, jy, jt);
+
             // Zone indicator
             Zone zone = carte.getZoneA(jx + jt / 2, jy + jt / 2);
             if (zone != null) {
                 g2.setColor(new Color(255, 255, 255, 150));
                 g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
-                g2.drawString("Zone: " + zone, 10, getHeight() - 10);
+                g2.drawString("Zone: " + zone, 10, getHeight() - 30);
+            }
+
+            // Barre de progression (en bas du panneau)
+            BarreProgression barre = controleurJeu.getBarreProgression();
+            if (barre != null) {
+                vueBarreProgression.dessiner(g2, barre, 10, getHeight() - 24,
+                        getWidth() - 20);
+            }
+
+            // Niveau indicator
+            g2.setColor(new Color(255, 255, 255, 200));
+            g2.setFont(new Font("SansSerif", Font.BOLD, 12));
+            g2.drawString("Niveau " + partie.getNiveau(), getWidth() - 80, 18);
+
+            // Aliens visuels sur la carte (vague intermédiaire)
+            ControleurAttaque ctrlAttaque = controleurJeu.getControleurAttaque();
+            if (ctrlAttaque != null && ctrlAttaque.isActif()) {
+                vueAliens.dessiner(g2, ctrlAttaque.getAliensVisuels(), false);
+                // Combat overlay uniquement pendant la phase combat
+                if (ctrlAttaque.isEnCombat()) {
+                    Attaque att = ctrlAttaque.getAttaqueCourante();
+                    vueCombat.dessiner(g2, att, joueur, getWidth(), getHeight(), false);
+                }
+            }
+
+            // Boss visuel sur la carte (combat final)
+            ControleurCombat ctrlCombat = controleurJeu.getControleurCombat();
+            if (ctrlCombat != null && ctrlCombat.isActif()) {
+                vueAliens.dessiner(g2, ctrlCombat.getAliensVisuels(), true);
+                if (ctrlCombat.isEnCombat()) {
+                    Attaque att = ctrlCombat.getAttaqueBoss();
+                    vueCombat.dessiner(g2, att, joueur, getWidth(), getHeight(), true);
+                }
+            }
+
+            // Game over / victoire overlay
+            EtatJeu etat = partie.getEtat();
+            if (etat == EtatJeu.VICTOIRE || etat == EtatJeu.DEFAITE) {
+                dessinerFinDePartie(g2, etat);
             }
 
             // Message flash
@@ -144,21 +212,73 @@ public class VuePrincipale extends JFrame {
                 g2.setFont(new Font("SansSerif", Font.BOLD, 14));
                 FontMetrics fm = g2.getFontMetrics();
                 int tw = fm.stringWidth(messageFlash);
-                g2.drawString(messageFlash, (getWidth() - tw) / 2, getHeight() / 2);
+                g2.drawString(messageFlash, (getWidth() - tw) / 2, getHeight() / 2 - 50);
             }
 
             // Repaint HUD too
             vueHUD.repaint();
         }
+
+        private void dessinerFinDePartie(Graphics2D g2, EtatJeu etat) {
+            // Dim overlay
+            g2.setColor(new Color(0, 0, 0, 150));
+            g2.fillRect(0, 0, getWidth(), getHeight());
+
+            String texte;
+            Color couleur;
+            if (etat == EtatJeu.VICTOIRE) {
+                texte = "NIVEAU TERMINÉ !";
+                couleur = new Color(80, 255, 80);
+            } else {
+                texte = "GAME OVER";
+                couleur = new Color(255, 80, 80);
+            }
+
+            g2.setColor(couleur);
+            g2.setFont(new Font("SansSerif", Font.BOLD, 36));
+            FontMetrics fm = g2.getFontMetrics();
+            int tw = fm.stringWidth(texte);
+            g2.drawString(texte, (getWidth() - tw) / 2, getHeight() / 2);
+
+            g2.setColor(Color.WHITE);
+            g2.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            String sub = etat == EtatJeu.VICTOIRE
+                    ? "Appuyez sur [ESPACE] pour le niveau suivant"
+                    : "Appuyez sur [ESPACE] pour recommencer";
+            FontMetrics fm2 = g2.getFontMetrics();
+            g2.drawString(sub, (getWidth() - fm2.stringWidth(sub)) / 2, getHeight() / 2 + 30);
+        }
     }
 
     // ─────────────────────────────────────────────
-    // Actions spéciales (acheter, récolter)
+    // Actions spéciales (acheter, récolter, espace)
     // ─────────────────────────────────────────────
     private class ActionKeyListener extends KeyAdapter {
 
         @Override
         public void keyPressed(KeyEvent e) {
+            // Handle space for game state transitions
+            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                EtatJeu etat = partie.getEtat();
+                if (etat == EtatJeu.VICTOIRE) {
+                    // Niveau suivant
+                    partie.niveauSuivant(Constantes.TEMPS_NIVEAU_MS + (partie.getNiveau() - 1) * 15_000L);
+                    partie.demarrer();
+                    joueur.soigner(joueur.getPointsDeVieMax());
+                    controleurJeu.initialiserNiveau(partie);
+                    flash("Niveau " + partie.getNiveau() + " !");
+                    return;
+                } else if (etat == EtatJeu.DEFAITE) {
+                    // Recommencer au niveau 1
+                    partie.niveauSuivant(Constantes.TEMPS_NIVEAU_MS);
+                    partie.demarrer();
+                    joueur.soigner(joueur.getPointsDeVieMax());
+                    controleurJeu.initialiserNiveau(partie);
+                    flash("Recommençons !");
+                    return;
+                }
+            }
+
             Zone zone = carte.getZoneA(
                     (int) joueur.getX() + joueur.getTaille() / 2,
                     (int) joueur.getY() + joueur.getTaille() / 2);
@@ -177,45 +297,56 @@ public class VuePrincipale extends JFrame {
 
                 // --- Marché : acheter ---
                 case KeyEvent.VK_ENTER:
-                    if (zone == Zone.MARCHE) acheter();
+                    if (zone == Zone.MARCHE) lancerAchat();
                     break;
 
                 // --- Ferme : récolter ---
                 case KeyEvent.VK_R:
-                    if (zone == Zone.FERME) recolter();
+                    if (zone == Zone.FERME) lancerRecolte();
+                    break;
+
+                // --- Pause ---
+                case KeyEvent.VK_P:
+                    if (partie.getEtat() == EtatJeu.EN_COURS) {
+                        partie.basculerPause();
+                        flash(partie.isEnPause() ? "PAUSE" : "Reprise !");
+                    }
                     break;
             }
         }
     }
 
+    private void lancerAchat() {
+        ActionDuree current = controleurJeu.getActionEnCours();
+        if (current != null && !current.isTerminee()) return; // already busy
+        ActionDuree action = new ActionDuree(ActionDuree.TypeAction.ACHAT, DUREE_ACHAT) {
+            @Override
+            public boolean mettreAJour(long deltaMs) {
+                boolean done = super.mettreAJour(deltaMs);
+                if (done) acheter();
+                return done;
+            }
+        };
+        controleurJeu.setActionEnCours(action);
+    }
+
+    private void lancerRecolte() {
+        ActionDuree current = controleurJeu.getActionEnCours();
+        if (current != null && !current.isTerminee()) return; // already busy
+        ActionDuree action = new ActionDuree(ActionDuree.TypeAction.RECOLTE, DUREE_RECOLTE) {
+            @Override
+            public boolean mettreAJour(long deltaMs) {
+                boolean done = super.mettreAJour(deltaMs);
+                if (done) recolter();
+                return done;
+            }
+        };
+        controleurJeu.setActionEnCours(action);
+    }
+
     private void acheter() {
-        int idx = vueMarche.getSelection();
-        if (idx < 0) {
-            flash("Sélectionnez un article (1/2)");
-            return;
-        }
-        ArticleMarche article = marche.getArticles().get(idx);
-        if (joueur.getMonnaie() < article.getPrix()) {
-            flash("Fonds insuffisants !");
-            return;
-        }
-        if (article.getType() == TypeArticle.VACHE && ferme.estPleine()) {
-            flash("Ferme pleine !");
-            return;
-        }
-        // Effectuer l'achat
-        joueur.depenser(article.getPrix());
-        if (article.getType() == TypeArticle.VACHE) {
-            // Place la vache à une position aléatoire dans la zone ferme
-            int[] zf = carte.getZoneFerme();
-            double vx = zf[0] + 20 + Math.random() * (zf[2] - 60);
-            double vy = zf[1] + 50 + Math.random() * (zf[3] - 100);
-            ferme.ajouterVache(new Vache(article.getNom() + "#" + (ferme.getNombreAnimaux() + 1), vx, vy));
-            flash("Vache achetée !");
-        } else if (article.getType() == TypeArticle.ARME) {
-            flash("Arme achetée : " + article.getNom());
-            // TODO: ajouter au joueur quand le module combat sera prêt
-        }
+        controleurMarche.acheter(vueMarche.getSelection());
+        flash(controleurMarche.getDernierMessage());
     }
 
     private void recolter() {

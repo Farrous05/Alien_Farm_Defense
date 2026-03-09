@@ -129,6 +129,24 @@ class FermeTest {
         });
     }
 
+    // ===== Enlèvement (abduction) =====
+
+    @Test
+    void enleverDerniereVacheRetireLaDerniere() {
+        Vache v1 = new Vache("V1", 0, 0);
+        Vache v2 = new Vache("V2", 0, 0);
+        ferme.ajouterVache(v1);
+        ferme.ajouterVache(v2);
+        Vache enlevee = ferme.enleverDerniereVache();
+        assertEquals(v2, enlevee);
+        assertEquals(1, ferme.getNombreAnimaux());
+    }
+
+    @Test
+    void enleverDerniereVacheFermeVideRetourneNull() {
+        assertNull(ferme.enleverDerniereVache());
+    }
+
     // ===== Utilitaire =====
 
     private Vache creerVacheProductive(String nom) {

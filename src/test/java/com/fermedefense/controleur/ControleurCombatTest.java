@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.fermedefense.controleur.ControleurCombat.PhaseBoss;
 import com.fermedefense.modele.combat.Arme;
 import com.fermedefense.modele.combat.ResultatCombat;
 import com.fermedefense.modele.joueur.Joueur;
@@ -22,6 +23,7 @@ class ControleurCombatTest {
     void setUp() {
         Niveau niveau = new Niveau(1);
         ctrl = new ControleurCombat(niveau, Arme.EPEE);
+        ctrl.setZoneFerme(0, 0, 200, 200);
         joueur = new Joueur(100, 100, 180, 100, 200);
     }
 
@@ -29,15 +31,20 @@ class ControleurCombatTest {
     void pasActifAvantLancement() {
         assertFalse(ctrl.isActif());
         assertFalse(ctrl.isTermine());
+        assertFalse(ctrl.isEnCombat());
+        assertEquals(PhaseBoss.INACTIF, ctrl.getPhase());
         assertNull(ctrl.getResultat());
     }
 
     @Test
-    void lancerCombatFinalRendActif() {
+    void lancerCombatFinalCommenceParApproche() {
         ctrl.lancerCombatFinal();
         assertTrue(ctrl.isActif());
+        assertFalse(ctrl.isEnCombat());
+        assertEquals(PhaseBoss.APPROCHE, ctrl.getPhase());
         assertNotNull(ctrl.getBoss());
         assertNotNull(ctrl.getAttaqueBoss());
+        assertNotNull(ctrl.getBossVisuel());
     }
 
     @Test

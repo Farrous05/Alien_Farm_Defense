@@ -11,6 +11,7 @@ import com.fermedefense.modele.ferme.Ferme;
 import com.fermedefense.modele.jeu.Carte;
 import com.fermedefense.modele.jeu.EtatJeu;
 import com.fermedefense.modele.jeu.Partie;
+import com.fermedefense.modele.joueur.ActionDuree;
 import com.fermedefense.modele.joueur.Joueur;
 import com.fermedefense.modele.progression.BarreProgression;
 import com.fermedefense.modele.progression.EvenementTemporel;
@@ -43,6 +44,7 @@ public class ControleurJeu {
     private ControleurAttaque controleurAttaque;
     private ControleurCombat controleurCombat;
     private Arme arme;
+    private ActionDuree actionEnCours;
 
     public ControleurJeu(Joueur joueur, Ferme ferme, Carte carte, JPanel vue) {
         this.joueur = joueur;
@@ -59,8 +61,13 @@ public class ControleurJeu {
         this.partie = partie;
         this.niveauCourant = new Niveau(partie.getNiveau());
         this.barreProgression = new BarreProgression(niveauCourant);
-        this.controleurAttaque = new ControleurAttaque(niveauCourant, arme);
+        this.controleurAttaque = new ControleurAttaque(niveauCourant, arme, ferme);
         this.controleurCombat = new ControleurCombat(niveauCourant, arme);
+
+        // Passer les coordonnées de la zone ferme pour le positionnement visuel des aliens
+        int[] zf = carte.getZoneFerme();
+        controleurAttaque.setZoneFerme(zf[0], zf[1], zf[2], zf[3]);
+        controleurCombat.setZoneFerme(zf[0], zf[1], zf[2], zf[3]);
     }
 
     /** Démarre la boucle de jeu. */
@@ -89,6 +96,11 @@ public class ControleurJeu {
 
         // 2. Ferme (croissance + production)
         ferme.mettreAJour(delta);
+
+        // 2b. Action en cours du joueur
+        if (actionEnCours != null) {
+            actionEnCours.mettreAJour(delta);
+        }
 
         // 3. Progression (si initialisée)
         if (partie != null && partie.getEtat() == EtatJeu.EN_COURS) {
@@ -157,4 +169,6 @@ public class ControleurJeu {
     public ControleurCombat getControleurCombat() { return controleurCombat; }
     public Arme getArme() { return arme; }
     public void setArme(Arme arme) { this.arme = arme; }
+    public ActionDuree getActionEnCours() { return actionEnCours; }
+    public void setActionEnCours(ActionDuree action) { this.actionEnCours = action; }
 }

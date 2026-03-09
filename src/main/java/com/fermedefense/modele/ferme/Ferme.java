@@ -52,6 +52,16 @@ public class Ferme {
         return vaches.remove(vache);
     }
 
+    /**
+     * Enlève la dernière vache de la ferme (abduction par un alien).
+     *
+     * @return la vache retirée, ou null si la ferme est vide
+     */
+    public Vache enleverDerniereVache() {
+        if (vaches.isEmpty()) return null;
+        return vaches.remove(vaches.size() - 1);
+    }
+
     // ---- Cycle de jeu ----
 
     /**
