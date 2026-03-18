@@ -24,6 +24,13 @@ import com.fermedefense.modele.progression.Niveau;
  *           → INACTIF
  */
 public class ControleurAttaque {
+    // Panneau de jeu pour notification visuelle
+    private Object panneauJeu;
+
+    /** Permet d'injecter le panneau de jeu pour notification visuelle */
+    public void setPanneauJeu(Object panneauJeu) {
+        this.panneauJeu = panneauJeu;
+    }
 
     /** Phase de l'attaque en cours. */
     public enum PhaseAttaque {

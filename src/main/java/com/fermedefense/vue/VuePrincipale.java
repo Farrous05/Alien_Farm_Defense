@@ -96,6 +96,12 @@ public class VuePrincipale extends JFrame {
         controleurJeu = new ControleurJeu(joueur, ferme, carte, panneauJeu);
         controleurMarche = new ControleurMarche(joueur, ferme, marche, carte, controleurJeu);
 
+        // Injection du panneau de jeu dans ControleurAttaque (pour notification visuelle)
+        ControleurAttaque ctrlAttaque = controleurJeu.getControleurAttaque();
+        if (ctrlAttaque != null) {
+            ctrlAttaque.setPanneauJeu(panneauJeu);
+        }
+
         // Fenêtre
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
@@ -126,6 +132,42 @@ public class VuePrincipale extends JFrame {
         PanneauJeu() {
             setPreferredSize(new Dimension(Constantes.LARGEUR_CARTE, Constantes.HAUTEUR_CARTE));
             setBackground(Color.BLACK);
+            // MouseListener :
+            // - Clic droit : sélectionne l'article
+            // - Clic gauche : achète l'article sélectionné si le joueur est dans la zone marché
+            addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mousePressed(java.awt.event.MouseEvent e) {
+                    int mx = e.getX();
+                    int my = e.getY();
+                    int[] zm = carte.getZoneMarche();
+                    // Vérifie si le clic est dans la zone graphique du marché
+                    if (mx >= zm[0] && mx <= zm[0] + zm[2] && my >= zm[1] && my <= zm[1] + zm[3]) {
+                        int jx = (int) joueur.getX();
+                        int jy = (int) joueur.getY();
+                        int jt = joueur.getTaille();
+                        Zone zone = carte.getZoneA(jx + jt / 2, jy + jt / 2);
+                        // Condition : actions possibles uniquement si le joueur est dans la zone marché
+                        if (zone == Zone.MARCHE) {
+                            int startY = zm[1] + 45;
+                            int itemH = 50;
+                            int idx = (my - startY) / itemH;
+                            if (idx >= 0 && idx < marche.getArticles().size()) {
+                                if (e.getButton() == java.awt.event.MouseEvent.BUTTON3) {
+                                    // Clic droit : sélectionne l'article
+                                    vueMarche.setSelection(idx);
+                                    repaint();
+                                } else if (e.getButton() == java.awt.event.MouseEvent.BUTTON1) {
+                                    // Clic gauche : achète l'article
+                                    vueMarche.setSelection(idx);
+                                    repaint();
+                                    lancerAchat();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         @Override
@@ -136,6 +178,12 @@ public class VuePrincipale extends JFrame {
 
             int[] zf = carte.getZoneFerme();
             int[] zm = carte.getZoneMarche();
+
+            // Récolte automatique de la monnaie produite par les vaches
+            int totalAuto = ferme.recolterTout();
+            if (totalAuto > 0) {
+                joueur.ajouterMonnaie(totalAuto);
+            }
 
             // Zones
             vueFerme.dessiner(g2, zf[0], zf[1], zf[2], zf[3]);
