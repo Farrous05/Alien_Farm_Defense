@@ -121,7 +121,7 @@ public class VuePrincipale extends JFrame {
 
     private void flash(String msg) {
         messageFlash = msg;
-        messageFlashExpire = System.currentTimeMillis() + 2000;
+        messageFlashExpire = System.currentTimeMillis() + 32000; // 32 secondes
     }
 
     // ─────────────────────────────────────────────
@@ -254,13 +254,21 @@ public class VuePrincipale extends JFrame {
                 dessinerFinDePartie(g2, etat);
             }
 
-            // Message flash
-            if (messageFlash != null && System.currentTimeMillis() < messageFlashExpire) {
+            // Message flash (priorité à celui du controleurAttaque)
+            ControleurAttaque ctrlAttaque2 = controleurJeu.getControleurAttaque();
+            String msg = null;
+            if (ctrlAttaque2 != null && ctrlAttaque2.getMessageFlash() != null) {
+                msg = ctrlAttaque2.getMessageFlash();
+                ctrlAttaque2.clearMessageFlash();
+            } else if (messageFlash != null && System.currentTimeMillis() < messageFlashExpire) {
+                msg = messageFlash;
+            }
+            if (msg != null) {
                 g2.setColor(new Color(255, 255, 255, 200));
                 g2.setFont(new Font("SansSerif", Font.BOLD, 14));
                 FontMetrics fm = g2.getFontMetrics();
-                int tw = fm.stringWidth(messageFlash);
-                g2.drawString(messageFlash, (getWidth() - tw) / 2, getHeight() / 2 - 50);
+                int tw = fm.stringWidth(msg);
+                g2.drawString(msg, (getWidth() - tw) / 2, getHeight() / 2 - 50);
             }
 
             // Repaint HUD too

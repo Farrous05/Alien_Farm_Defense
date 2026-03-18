@@ -145,7 +145,7 @@ public class ControleurJeu {
             for (EvenementTemporel evt : evenements) {
                 switch (evt.getType()) {
                     case ATTAQUE_INTERMEDIAIRE:
-                        controleurAttaque.declencherVague(evt.getIndexVague());
+                        controleurAttaque.declencherVague(evt.getIndexVague(), carte, joueur);
                         break;
                     case COMBAT_FINAL:
                         partie.mettreAJour(delta); // force COMBAT_FINAL state
