@@ -153,8 +153,8 @@ public class ControleurAttaque {
                 break;
 
             case COMBAT:
-                // Faire avancer le combat automatique
-                attaqueCourante.mettreAJour(deltaMs, joueur, arme);
+                // Faire avancer le combat côté alien et cooldowns
+                attaqueCourante.mettreAJour(deltaMs, joueur);
                 // Animer les aliens visuels (tremblements)
                 for (AlienVisuel av : aliensVisuels) {
                     av.mettreAJour(deltaMs);

@@ -94,7 +94,7 @@ public class ControleurCombat {
                 break;
 
             case COMBAT:
-                attaqueBoss.mettreAJour(deltaMs, joueur, arme);
+                attaqueBoss.mettreAJour(deltaMs, joueur);
                 bossVisuel.mettreAJour(deltaMs);
 
                 if (attaqueBoss.isTerminee()) {

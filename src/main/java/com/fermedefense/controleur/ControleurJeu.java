@@ -103,7 +103,9 @@ public class ControleurJeu {
         }
 
         // 3. Progression (si initialisée)
-        if (partie != null && partie.getEtat() == EtatJeu.EN_COURS) {
+        // Le combat final doit continuer à être mis à jour même quand l'état est COMBAT_FINAL.
+        if (partie != null && (partie.getEtat() == EtatJeu.EN_COURS
+            || partie.getEtat() == EtatJeu.COMBAT_FINAL)) {
             tickProgression(delta);
         }
 

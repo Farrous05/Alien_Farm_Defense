@@ -40,7 +40,8 @@ class ControleurMarcheTest {
         ControleurMarche.ResultatAchat r = controleurMarche.acheter(0); // Vache laitière @50
         assertEquals(ControleurMarche.ResultatAchat.OK, r);
         assertEquals(150, joueur.getMonnaie());
-        assertEquals(1, ferme.getNombreAnimaux());
+        // La vache doit être dans l'inventaire
+        assertNotNull(joueur.getInventaire().getObjet(0, 0));
     }
 
     @Test
@@ -57,8 +58,8 @@ class ControleurMarcheTest {
         ControleurMarche.ResultatAchat r = controleurMarche.acheter(1); // Rayon laser @120
         assertEquals(ControleurMarche.ResultatAchat.OK, r);
         assertEquals(80, joueur.getMonnaie());
-        // L'arme doit être mise à jour dans le contrôleur de jeu
-        assertEquals(ControleurMarche.RAYON_LASER, controleurJeu.getArme());
+        // L'arme doit être dans l'inventaire (pas équipée automatiquement)
+        assertNotNull(joueur.getInventaire().getObjet(0, 0));
     }
 
     @Test
@@ -98,14 +99,16 @@ class ControleurMarcheTest {
     // ─── Ferme pleine ───
 
     @Test
-    void acheterVacheFermePleine() {
-        // Remplir la ferme (capacité 10)
-        for (int i = 0; i < 10; i++) {
-            ferme.ajouterVache(new com.fermedefense.modele.ferme.Vache("v" + i, 50, 50));
+    void acheterInventairePlein() {
+        // Remplir l'inventaire (5x5)
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                joueur.getInventaire().ajouterObjet(new com.fermedefense.modele.combat.Arme("Dummy", 0, 0));
+            }
         }
         // Joueur a assez d'argent
         ControleurMarche.ResultatAchat r = controleurMarche.acheter(0);
-        assertEquals(ControleurMarche.ResultatAchat.FERME_PLEINE, r);
+        assertEquals(ControleurMarche.ResultatAchat.INVENTAIRE_PLEIN, r);
         assertEquals(200, joueur.getMonnaie()); // pas dépensé
     }
 
@@ -126,6 +129,7 @@ class ControleurMarcheTest {
 
         assertEquals(ControleurMarche.ResultatAchat.FONDS_INSUFFISANTS,
                 controleurMarche.acheter(1));
-        assertEquals(2, ferme.getNombreAnimaux());
+        assertNotNull(joueur.getInventaire().getObjet(0, 0)); // première vache
+        assertNotNull(joueur.getInventaire().getObjet(0, 1)); // deuxième vache
     }
 }

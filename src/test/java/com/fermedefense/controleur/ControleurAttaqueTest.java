@@ -13,6 +13,7 @@ import com.fermedefense.modele.combat.Arme;
 import com.fermedefense.modele.combat.ResultatCombat;
 import com.fermedefense.modele.ferme.Ferme;
 import com.fermedefense.modele.ferme.Vache;
+import com.fermedefense.modele.jeu.Carte;
 import com.fermedefense.modele.joueur.Joueur;
 import com.fermedefense.modele.progression.Niveau;
 
@@ -21,6 +22,7 @@ class ControleurAttaqueTest {
     private ControleurAttaque ctrl;
     private Joueur joueur;
     private Ferme ferme;
+    private Carte carte;
 
     @BeforeEach
     void setUp() {
@@ -28,6 +30,7 @@ class ControleurAttaqueTest {
         ferme = new Ferme();
         ctrl = new ControleurAttaque(niveau, Arme.EPEE, ferme);
         ctrl.setZoneFerme(0, 0, 200, 200);
+        carte = new Carte(900, 440);
         joueur = new Joueur(100, 100, 180, 100, 200);
     }
 
@@ -42,7 +45,7 @@ class ControleurAttaqueTest {
 
     @Test
     void declencherVagueCommenceParApproche() {
-        ctrl.declencherVague(0);
+        ctrl.declencherVague(0, carte, joueur);
         assertTrue(ctrl.isActif());
         assertFalse(ctrl.isEnCombat());
         assertEquals(PhaseAttaque.APPROCHE, ctrl.getPhase());
@@ -52,11 +55,12 @@ class ControleurAttaqueTest {
 
     @Test
     void victoireContreVagueNiveauUn() {
-        ctrl.declencherVague(0);
+        ctrl.declencherVague(0, carte, joueur);
         // Alien: 20 PV, épée: 15 dég/1000ms → 2 coups suffisent
         // Simuler assez de temps pour tuer l'alien
         for (int i = 0; i < 200; i++) {
             ctrl.mettreAJour(100, joueur);
+            if (ctrl.isEnCombat()) ctrl.getAttaqueCourante().frapperManuel(Arme.EPEE);
             if (!ctrl.isActif()) break;
         }
         assertFalse(ctrl.isActif());
@@ -68,10 +72,11 @@ class ControleurAttaqueTest {
     void joueurMortPendantVague() {
         // Joueur avec très peu de PV
         Joueur joueurFaible = new Joueur(100, 100, 180, 1, 200);
-        ctrl.declencherVague(0);
+        ctrl.declencherVague(0, carte, joueurFaible);
         // Alien: 5 dég → un coup suffit à tuer le joueur (1 PV)
         for (int i = 0; i < 200; i++) {
             ctrl.mettreAJour(100, joueurFaible);
+            if (ctrl.isEnCombat()) ctrl.getAttaqueCourante().frapperManuel(Arme.EPEE);
             if (!ctrl.isActif()) break;
         }
         assertFalse(ctrl.isActif());
@@ -87,16 +92,18 @@ class ControleurAttaqueTest {
 
     @Test
     void deuxVaguesSuccessives() {
-        ctrl.declencherVague(0);
+        ctrl.declencherVague(0, carte, joueur);
         for (int i = 0; i < 200; i++) {
             ctrl.mettreAJour(100, joueur);
+            if (ctrl.isEnCombat()) ctrl.getAttaqueCourante().frapperManuel(Arme.EPEE);
             if (!ctrl.isActif()) break;
         }
         assertEquals(1, ctrl.getVaguesTerminees());
 
-        ctrl.declencherVague(1);
+        ctrl.declencherVague(1, carte, joueur);
         for (int i = 0; i < 200; i++) {
             ctrl.mettreAJour(100, joueur);
+            if (ctrl.isEnCombat()) ctrl.getAttaqueCourante().frapperManuel(Arme.EPEE);
             if (!ctrl.isActif()) break;
         }
         assertEquals(2, ctrl.getVaguesTerminees());
@@ -111,9 +118,10 @@ class ControleurAttaqueTest {
         assertEquals(2, ferme.getNombreAnimaux());
 
         Joueur joueurFaible = new Joueur(100, 100, 180, 1, 200);
-        ctrl.declencherVague(0);
+        ctrl.declencherVague(0, carte, joueurFaible);
         for (int i = 0; i < 200; i++) {
             ctrl.mettreAJour(100, joueurFaible);
+            if (ctrl.isEnCombat()) ctrl.getAttaqueCourante().frapperManuel(Arme.EPEE);
             if (!ctrl.isActif()) break;
         }
         assertEquals(ResultatCombat.DEFAITE, ctrl.getResultat());
@@ -124,9 +132,10 @@ class ControleurAttaqueTest {
     @Test
     void victoireNeEnlevePasDeVache() {
         ferme.ajouterVache(new Vache("V1", 10, 10));
-        ctrl.declencherVague(0);
+        ctrl.declencherVague(0, carte, joueur);
         for (int i = 0; i < 200; i++) {
             ctrl.mettreAJour(100, joueur);
+            if (ctrl.isEnCombat()) ctrl.getAttaqueCourante().frapperManuel(Arme.EPEE);
             if (!ctrl.isActif()) break;
         }
         assertEquals(ResultatCombat.VICTOIRE, ctrl.getResultat());
@@ -138,9 +147,10 @@ class ControleurAttaqueTest {
     void defaiteFermeVidePasErreur() {
         assertEquals(0, ferme.getNombreAnimaux());
         Joueur joueurFaible = new Joueur(100, 100, 180, 1, 200);
-        ctrl.declencherVague(0);
+        ctrl.declencherVague(0, carte, joueurFaible);
         for (int i = 0; i < 200; i++) {
             ctrl.mettreAJour(100, joueurFaible);
+            if (ctrl.isEnCombat()) ctrl.getAttaqueCourante().frapperManuel(Arme.EPEE);
             if (!ctrl.isActif()) break;
         }
         assertEquals(ResultatCombat.DEFAITE, ctrl.getResultat());

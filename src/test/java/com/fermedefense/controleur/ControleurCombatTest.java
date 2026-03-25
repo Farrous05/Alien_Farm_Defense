@@ -63,6 +63,7 @@ class ControleurCombatTest {
         // Boss: 120 PV, épée: 15 dég/1000ms → 8 coups
         for (int i = 0; i < 400; i++) {
             ctrl.mettreAJour(100, joueur);
+            if (ctrl.isEnCombat()) ctrl.getAttaqueBoss().frapperManuel(Arme.EPEE);
             if (ctrl.isTermine()) break;
         }
         assertTrue(ctrl.isTermine());
@@ -80,6 +81,7 @@ class ControleurCombatTest {
 
         for (int i = 0; i < 400; i++) {
             ctrl.mettreAJour(100, joueurFaible);
+            if (ctrl.isEnCombat()) ctrl.getAttaqueBoss().frapperManuel(Arme.EPEE);
             if (ctrl.isTermine()) break;
         }
         assertTrue(ctrl.isTermine());

@@ -1,0 +1,438 @@
+Alien Farm Defense
+1) Cahier de charges
+Version de base:
+Le jeu se déroule sur une carte vue du dessus où le joueur incarne un fermier qui peut se
+déplacer en temps réel entre deux zones principales : la ferme, et le marché, tout en gardant
+en permanence un affichage de sa monnaie en haut de l’écran.
+À la ferme, toutes les vaches achetées apparaissent et évoluent automatiquement avec le
+temps : chaque vache grossit progressivement, puis devient “prête” à être vendue, ce qui
+permet au joueur de récupérer de l’argent.
+Le marché sert justement à utiliser cette monnaie pour acheter de nouvelles vaches (ou
+éventuellement d’autres animaux) afin d’augmenter la production, mais aussi pour acheter des
+armes nécessaires à la défense.
+Le cœur du gameplay repose sur une barre de progression temporelle en haut de l’interface
+qui représente la durée de la partie et annonce à l’avance plusieurs petites attaques
+d’extraterrestres : à certains moments indiqués sur cette barre, des extraterrestres arrivent
+pour tenter d’enlever un certain nombre de vaches, et le joueur doit anticiper ces attaques en
+étant présent dans la ferme au bon moment pour défendre et empêcher les enlèvements.
+Au terme de cette progression, lorsque le temps est écoulé, le jeu bascule automatiquement
+vers une fenêtre de combat final de type “ final boss”
+, où la victoire ou la défaite dépend
+directement des armes achetées au marché et du niveau de difficulté atteint (victoire/perte
+automatique par rapport à la puissance des armes vs. puissance du boss des extraterrestres).
+À mesure que le joueur progresse dans les niveaux, le temps total peut diminuer, les attaques
+intermédiaires deviennent plus nombreuses (ou plus exigeantes), ou le boss final devient plus
+puissant, ce qui oblige le joueur à optimiser ses achats et son timing de déplacement entre
+marché et ferme pour atteindre l’objectif du combat tout en survivant aux attaques
+intermédiaires.
+Version Plus avancée:
+Nous aimerions ajouter par la suite un système d’inventaire, sous la forme d’une grille dans
+laquelle chaque objet occupe une case. Cet inventaire permettra de stocker et gérer les armes
+achetées, mais aussi les vaches acquises au marché avant de les placer dans la ferme : le
+joueur pourra ainsi les “poser” lorsqu’il revient à la ferme, ou bien les sélectionner directement
+pour les vendre au marché.
+Grâce à cette évolution, le combat ne se limitera plus à une simple animation suivie d’une
+comparaison automatique de puissance, mais deviendra une fonctionnalité interactive : le
+joueur pourra choisir les armes à utiliser parmi celles disponibles dans son inventaire et
+participer de manière plus dynamique au déroulement du combat.
+Inspirations pour les différents éléments du jeu:
+2) Analyse globale
+Cette analyse présente les fonctionnalités principales du jeu Alien Farm Defense.
+Chaque fonctionnalité est décrite de manière générale, avec son niveau de difficulté et sa
+priorité, avant une analyse plus détaillée dans les sections suivantes du document.
+1. Gestion de l’unité joueur (fermier polyvalent)
+Description
+Le joueur contrôle un unique personnage, le fermier, capable d’effectuer toutes les actions du
+jeu.
+Le fermier se déplace en temps réel sur la carte et ne peut effectuer qu’une action à la fois,
+chaque action ayant une durée.
+Fonctionnalités principales
+●
+●
+●
+●
+Déplacement libre entre la ferme et le marché
+Lancement d’actions (défendre, vendre, acheter, se déplacer)
+Gestion d’une action en cours avec barre de progression
+Accès et utilisation de l’inventaire
+Difficulté : Moyenne
+Priorité : Très élevée (fonctionnalité centrale)
+2. Système de ressources (temps réel)
+Description
+Les vaches (et éventuellement d’autres animaux) sont des ressources qui évoluent
+automatiquement avec le temps.
+Chaque vache possède sa propre progression de croissance et devient vendable une fois
+mature.
+Fonctionnalités principales
+●
+●
+●
+●
+Création des vaches lors de l’achat
+Progression de croissance indépendante pour chaque vache
+Vente des vaches une fois matures
+Perte ou interruption possible en cas d’attaque extraterrestre
+Difficulté : Moyenne
+Priorité : Très élevée (objectif économique principal)
+3. Inventaire du joueur
+Cette fonctionnalité correspond à la version avancée du projet et n’est pas indispensable au
+fonctionnement de la version de base.
+Description
+Le joueur dispose d’un inventaire unique regroupant tous ses objets : vaches, armes,
+améliorations.
+L’inventaire sert de lien entre la ferme, le marché et le combat final.
+Fonctionnalités principales
+●
+●
+●
+●
+Stockage des vaches achetées
+Stockage des armes et équipements
+Consultation de l’inventaire via l’interface
+Utilisation automatique ou manuelle des objets selon le contexte
+Difficulté : Faible à moyenne
+Priorité : Élevée
+4. Économie et marché
+Description
+Le marché permet au joueur de dépenser sa monnaie pour améliorer sa production et sa
+capacité de défense.
+Les achats ne sont pas instantanés : ils nécessitent une action avec durée.
+Fonctionnalités principales
+●
+●
+●
+●
+●
+Gestion de la monnaie
+Interface du marché
+Achat d’animaux
+Achat d’armes et améliorations
+Ajout automatique des objets achetés à l’inventaire
+Difficulté : Moyenne
+Priorité : Élevée
+5. Système d’attaques extraterrestres
+Description
+Des attaques extraterrestres surviennent à des moments précis indiqués par la barre de
+progression globale.
+Les extraterrestres tentent d’enlever des vaches pendant un temps limité.
+Fonctionnalités principales
+●
+●
+●
+●
+Apparition programmée des extraterrestres
+Déplacement vers les vaches
+Tentative d’enlèvement
+Repoussement possible si le joueur est présent
+Difficulté : Moyenne
+Priorité : Élevée
+6. Progression temporelle et rythme du jeu
+Description
+Une barre de progression globale structure toute la partie.
+Elle annonce les attaques intermédiaires et déclenche le combat final.
+Fonctionnalités principales
+●
+●
+●
+●
+Timer global de niveau
+Marqueurs d’attaques intermédiaires
+Déclenchement automatique du boss final
+Augmentation progressive de la difficulté entre les niveaux
+Difficulté : Faible à moyenne
+Priorité : Très élevée (rythme du jeu)
+7. Combat final (Boss)
+Dans la version de base, le combat repose sur un calcul automatique de puissance ; dans la
+version avancée, il devient interactif via l’inventaire.
+Description
+À la fin du temps imparti, le jeu bascule vers un combat final.
+L’issue dépend directement des décisions économiques prises pendant la phase de gestion.
+Fonctionnalités principales
+●
+Transition vers une scène de combat
+●
+●
+●
+Calcul de la puissance du joueur selon son inventaire
+Boss avec difficulté variable
+Victoire ou défaite menant à la suite ou à la fin du jeu
+Difficulté : Moyenne
+Priorité : Moyenne à élevée
+3) Plan de développement
+Organisation par fonctionnalités principales
+1) Gestion du joueur
+●
+Analyse : définir les actions possibles (déplacement, interaction)
+●
+Conception : modèle Joueur + contrôleur
+●
+Développement : gestion des déplacements et actions
+●
+Tests : vérifier déplacements et interactions
+2) Système de ressources
+●
+Analyse : comprendre le cycle de vie des vaches
+●
+Conception : état (croissance → prêt à vendre)
+●
+Développement : évolution automatique (thread / timer)
+●
+Tests : vérifier progression et vente
+3) Inventaire (version avancée)
+●
+Analyse : stockage des objets
+●
+Conception : structure en grille
+●
+Développement : ajout / retrait objets
+●
+Tests : cohérence des objets
+4) Marché
+●
+Analyse : logique d’achat
+●
+Conception : séparation modèle / interface
+●
+Développement : achat + mise à jour monnaie
+●
+Tests : cas achat réussi / refus
+5) Attaques extraterrestres
+●
+Analyse : événements temporels
+●
+Conception : système d’apparition
+●
+Développement : déplacement + enlèvement
+●
+Tests : comportement des attaques
+6) Progression temporelle
+●
+Analyse : structurer la partie
+●
+Conception : barre de progression
+●
+Développement : timer + événements
+●
+Tests : déclenchement correct
+7) Combat final
+●
+Analyse : condition de victoire
+●
+Conception : calcul de puissance
+●
+Développement : transition + résultat
+●
+Tests : victoire/défaite
+4) Conception générale
+4.1 Vue d’ensemble par blocs fonctionnels
+Le système est structuré autour des blocs suivants :
+●
+Joueur (actions, déplacement)
+●
+Ressources (vaches)
+●
+Marché (économie)
+●
+Attaques extraterrestres
+●
+Progression temporelle
+●
+Combat final
+●
+Interface graphique
+4.2 Circulation de l’information
+●
+Le joueur agit via l’interface → contrôleur
+●
+Le contrôleur modifie le modèle
+●
+Le modèle met à jour les données
+●
+La vue affiche l’état du jeu
+Interactions importantes :
+●
+Marché → modifie joueur + ressources
+●
+Ressources → influencent économie
+●
+Progression → déclenche attaques
+●
+Attaques → modifient ressources
+●
+Combat → dépend inventaire
+5) Conception détaillée
+5.1 Gestion du joueur
+Structures :
+●
+●
+position du joueur
+état (action en cours)
+Algorithme :
+●
+●
+●
+recevoir input utilisateur
+mettre à jour position
+déclencher action
+Lien avec autres modules :
+●
+●
+interagit avec marché et ferme
+déclenche défense contre attaques
+5.2 Système de ressources
+Structures :
+●
+●
+liste de vaches
+état de croissance
+Algorithme :
+●
+pour chaque vache :
+○
+augmenter progression
+○
+si seuil atteint → vendable
+Lien :
+●
+●
+génère argent
+peut être affecté par attaques
+5.3 Inventaire ( à venir)
+5.4 Marché
+Structures :
+●
+●
+liste d’articles
+monnaie joueur
+Algorithme :
+1. sélectionner article
+2. vérifier argent
+3. effectuer achat
+4. ajouter à inventaire (visible directement dans la ferme pour les vaches ou stocké
+internellement pour les rames à ce stade)
+Lien :
+●
+●
+dépend du joueur
+alimente ressources et combat
+5.5 Attaques extraterrestres
+Structures :
+●
+●
+liste d’ennemis
+positions
+Algorithme :
+●
+●
+●
+apparition à temps donné
+déplacement vers cible
+tentative d’enlèvement
+Lien :
+●
+●
+dépend progression
+impacte ressources
+5.6 Progression temporelle
+Structures :
+●
+●
+timer global
+événements planifiés
+Algorithme :
+●
+●
+Lien :
+incrémenter temps
+déclencher événements
+●
+●
+contrôle attaques
+déclenche boss
+5.7 Combat final
+Structures :
+●
+puissance joueur
+puissance boss
+Algorithme :
+●
+●
+comparer puissances
+déterminer résultat
+Lien :
+●
+●
+dépend inventaire des armes
+fin de partie
+6) Résultats
+Version sans beaucoup
+d’éléments graphiques mais qui
+permet de voir 2 zones
+distinguées (ferme et marché) et
+d’effectuer des achats lorsqu’on
+est dans la zone marché, et puis
+de voir les différents états de
+progression des vaches
+achetées dans la ferme (et leur
+rapport d’argent au stade de
+productivité), ainsi que les
+attaques intermédiaires
+d’extraterrestres qui enlèvent
+réellement la dernière vache
+acquise de la ferme si le joueur
+ne se trouve pas dans la ferme.
+7) Documentation utilisateur
+Lancement : Exécuter la classe Main.
+Commandes
+●
+●
+●
+Déplacement : clavier
+Marché : clic souris
+Achat : bouton
+Objectif
+●
+●
+●
+gagner de l’argent
+survivre aux attaques
+préparer le combat final
+8) Documentation développeur
+Point d’entrée : main.Main
+Classes importantes
+●
+●
+●
+●
+●
+Joueur → logique joueur
+Ferme → ressources
+Marche → économie
+ControleurJeu → logique globale
+VuePrincipale → affichage
+Package Rôle
+modele/joueur Fermier,
+inventaire,
+actions en cours
+modele/ferme Vaches,
+croissance,
+ferme
+modele/marche Boutique,
+articles, types
+d'achat
+modele/combat Extraterrestres,
+attaques, boss,
+armes
+modele/progression Barre de temps,
+niveaux,
+événements
+modele/jeu vue/ controleur/ utilitaire/ État global, carte,
+logique de partie
+Toutes les vues
+(ferme, marché,
+combat, HUD)
+Liaison vue ↔
+modèle, gestion
+des entrées
+Constantes,
+gestion du temps

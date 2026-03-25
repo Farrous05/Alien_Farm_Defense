@@ -54,13 +54,35 @@ public class Attaque {
     }
 
     /**
-     * Met à jour le combat d'un tick.
+     * Déclenche une attaque manuelle avec l'arme sélectionnée.
+     */
+    public void frapperManuel(Arme arme) {
+        if (resultat != ResultatCombat.EN_COURS) return;
+        Extraterrestre alien = getAlienCourant();
+        if (alien == null || !alien.isVivant()) return;
+        
+        if (tempsCooldownJoueur <= 0) {
+            alien.subirDegats(arme.getDegats());
+            totalDegatsInfliges += arme.getDegats();
+            tempsCooldownJoueur = arme.getCooldownMs();
+            
+            if (!alien.isVivant()) {
+                indexAlienCourant++;
+                if (indexAlienCourant >= aliens.size()) {
+                    resultat = ResultatCombat.VICTOIRE;
+                }
+                tempsCooldownAlien = 0;
+            }
+        }
+    }
+
+    /**
+     * Met à jour le combat d'un tick (cooldowns et attaques aliens).
      *
      * @param deltaMs temps écoulé
      * @param joueur  le joueur (subit les dégâts de l'alien)
-     * @param arme    l'arme du joueur (inflige les dégâts à l'alien)
      */
-    public void mettreAJour(long deltaMs, Joueur joueur, Arme arme) {
+    public void mettreAJour(long deltaMs, Joueur joueur) {
         if (resultat != ResultatCombat.EN_COURS) return;
 
         Extraterrestre alien = getAlienCourant();
@@ -72,24 +94,6 @@ public class Attaque {
         // Réduire les cooldowns
         tempsCooldownJoueur -= deltaMs;
         tempsCooldownAlien -= deltaMs;
-
-        // Le joueur attaque
-        if (tempsCooldownJoueur <= 0) {
-            alien.subirDegats(arme.getDegats());
-            totalDegatsInfliges += arme.getDegats();
-            tempsCooldownJoueur = arme.getCooldownMs();
-
-            // Alien mort ? Passer au suivant
-            if (!alien.isVivant()) {
-                indexAlienCourant++;
-                if (indexAlienCourant >= aliens.size()) {
-                    resultat = ResultatCombat.VICTOIRE;
-                    return;
-                }
-                // Reset cooldowns pour le nouvel alien
-                tempsCooldownAlien = 0;
-            }
-        }
 
         // L'alien attaque le joueur
         if (tempsCooldownAlien <= 0 && alien.isVivant()) {

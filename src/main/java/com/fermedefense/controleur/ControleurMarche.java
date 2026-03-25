@@ -17,7 +17,7 @@ import com.fermedefense.modele.marche.TypeArticle;
 public class ControleurMarche {
 
     /** Résultat d'un achat, contient un message à afficher. */
-    public enum ResultatAchat { OK, FONDS_INSUFFISANTS, FERME_PLEINE, AUCUNE_SELECTION }
+    public enum ResultatAchat { OK, FONDS_INSUFFISANTS, INVENTAIRE_PLEIN, AUCUNE_SELECTION }
 
     private final Joueur joueur;
     private final Ferme ferme;
@@ -58,23 +58,20 @@ public class ControleurMarche {
             return ResultatAchat.FONDS_INSUFFISANTS;
         }
 
-        if (article.getType() == TypeArticle.VACHE && ferme.estPleine()) {
-            dernierMessage = "Ferme pleine !";
-            return ResultatAchat.FERME_PLEINE;
+        if (joueur.getInventaire().isPlein()) {
+            dernierMessage = "Inventaire plein !";
+            return ResultatAchat.INVENTAIRE_PLEIN;
         }
 
         joueur.depenser(article.getPrix());
 
         if (article.getType() == TypeArticle.VACHE) {
-            int[] zf = carte.getZoneFerme();
-            double vx = zf[0] + 20 + Math.random() * (zf[2] - 60);
-            double vy = zf[1] + 50 + Math.random() * (zf[3] - 100);
-            ferme.ajouterVache(new Vache(
-                    article.getNom() + "#" + (ferme.getNombreAnimaux() + 1), vx, vy));
+            joueur.getInventaire().ajouterObjet(new Vache(
+                    article.getNom() + "#" + (ferme.getNombreAnimaux() + 1), 0, 0));
             dernierMessage = "Vache achetée !";
         } else if (article.getType() == TypeArticle.ARME) {
-            controleurJeu.setArme(RAYON_LASER);
-            dernierMessage = "Arme équipée : " + article.getNom();
+            joueur.getInventaire().ajouterObjet(new Arme(article.getNom(), RAYON_LASER.getDegats(), RAYON_LASER.getCooldownMs()));
+            dernierMessage = "Arme ajoutée à l'inventaire : " + article.getNom();
         }
 
         return ResultatAchat.OK;

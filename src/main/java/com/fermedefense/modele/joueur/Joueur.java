@@ -24,6 +24,9 @@ public class Joueur {
     // --- Monnaie ---
     private int monnaie;
 
+    // --- Inventaire ---
+    private Inventaire inventaire;
+
     /**
      * Crée un joueur à la position donnée.
      *
@@ -42,6 +45,7 @@ public class Joueur {
         this.pointsDeVieMax = pointsDeVieMax;
         this.pointsDeVie = pointsDeVieMax;
         this.monnaie = monnaieInit;
+        this.inventaire = new Inventaire();
     }
 
     /**
@@ -180,5 +184,9 @@ public class Joueur {
 
     public int getMonnaie() {
         return monnaie;
+    }
+
+    public Inventaire getInventaire() {
+        return inventaire;
     }
 }

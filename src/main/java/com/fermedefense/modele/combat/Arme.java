@@ -9,7 +9,9 @@ package com.fermedefense.modele.combat;
  *
  * Classe modèle pure.
  */
-public class Arme {
+import com.fermedefense.modele.joueur.ObjetInventaire;
+
+public class Arme implements ObjetInventaire {
 
     /** Épée par défaut disponible dès le départ. */
     public static final Arme EPEE = new Arme("Épée", 15, 1000);
@@ -24,7 +26,12 @@ public class Arme {
         this.cooldownMs = cooldownMs;
     }
 
+    @Override
     public String getNom() { return nom; }
+
+    @Override
+    public String getDescription() { return "Dégâts: " + degats; }
+
     public int getDegats() { return degats; }
     public long getCooldownMs() { return cooldownMs; }
 

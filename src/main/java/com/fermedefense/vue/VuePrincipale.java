@@ -51,6 +51,7 @@ public class VuePrincipale extends JFrame {
     private final VueCombat vueCombat;
     private final VueActionJoueur vueActionJoueur;
     private final VueAliens vueAliens;
+    private final VueInventaire vueInventaire;
     private final PanneauJeu panneauJeu;
 
     private final ControleurJeu controleurJeu;
@@ -81,6 +82,7 @@ public class VuePrincipale extends JFrame {
         this.vueCombat = new VueCombat();
         this.vueActionJoueur = new VueActionJoueur();
         this.vueAliens = new VueAliens();
+        this.vueInventaire = new VueInventaire(joueur.getInventaire(), Constantes.LARGEUR_CARTE - 220, 50);
         this.panneauJeu = new PanneauJeu();
 
         // Layout
@@ -166,6 +168,61 @@ public class VuePrincipale extends JFrame {
                             }
                         }
                     }
+                    
+                    // Vérifie si le clic est dans l'inventaire
+                    int viX = vueInventaire.getX();
+                    int viY = vueInventaire.getY();
+                    int viTC = vueInventaire.getTailleCase();
+                    int viW = joueur.getInventaire().getColonnes() * viTC;
+                    int viH = joueur.getInventaire().getLignes() * viTC;
+
+                    if (mx >= viX && mx < viX + viW && my >= viY && my < viY + viH) {
+                        int col = (mx - viX) / viTC;
+                        int lig = (my - viY) / viTC;
+                        vueInventaire.setSelection(lig, col);
+                        
+                        com.fermedefense.modele.joueur.ObjetInventaire obj = joueur.getInventaire().getObjet(lig, col);
+                        if (obj instanceof com.fermedefense.modele.ferme.Vache) {
+                            int jx = (int) joueur.getX();
+                            int jy = (int) joueur.getY();
+                            int jt = joueur.getTaille();
+                            Zone zone = carte.getZoneA(jx + jt / 2, jy + jt / 2);
+                            
+                            if (zone == Zone.FERME) {
+                                if (!ferme.estPleine()) {
+                                    joueur.getInventaire().retirerObjet(lig, col);
+                                    int[] zf = carte.getZoneFerme();
+                                    double vx = zf[0] + 20 + Math.random() * (zf[2] - 60);
+                                    double vy = zf[1] + 50 + Math.random() * (zf[3] - 100);
+                                    com.fermedefense.modele.ferme.Vache v = (com.fermedefense.modele.ferme.Vache) obj;
+                                    v.setX(vx);
+                                    v.setY(vy);
+                                    ferme.ajouterVache(v);
+                                    vueInventaire.setSelection(-1, -1);
+                                    flash("Vache déployée !");
+                                } else {
+                                    flash("La ferme est pleine !");
+                                }
+                            } else {
+                                flash("Allez à la ferme pour déployer");
+                            }
+                        } else if (obj instanceof com.fermedefense.modele.combat.Arme) {
+                            com.fermedefense.modele.combat.Arme arme = (com.fermedefense.modele.combat.Arme) obj;
+                            ControleurAttaque ctrlAttaque = controleurJeu.getControleurAttaque();
+                            ControleurCombat ctrlCombat = controleurJeu.getControleurCombat();
+                            
+                            if (ctrlAttaque != null && ctrlAttaque.isEnCombat()) {
+                                ctrlAttaque.getAttaqueCourante().frapperManuel(arme);
+                                vueInventaire.setSelection(-1, -1);
+                            } else if (ctrlCombat != null && ctrlCombat.isEnCombat()) {
+                                ctrlCombat.getAttaqueBoss().frapperManuel(arme);
+                                vueInventaire.setSelection(-1, -1);
+                            } else {
+                                flash("Aucun alien à combattre !");
+                            }
+                        }
+                        repaint();
+                    }
                 }
             });
         }
@@ -226,6 +283,9 @@ public class VuePrincipale extends JFrame {
             g2.setColor(new Color(255, 255, 255, 200));
             g2.setFont(new Font("SansSerif", Font.BOLD, 12));
             g2.drawString("Niveau " + partie.getNiveau(), getWidth() - 80, 18);
+            
+            // Inventaire
+            vueInventaire.dessiner(g2);
 
             // Aliens visuels sur la carte (vague intermédiaire)
             ControleurAttaque ctrlAttaque = controleurJeu.getControleurAttaque();

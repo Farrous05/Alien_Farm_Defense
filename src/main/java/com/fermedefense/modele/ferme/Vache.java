@@ -12,7 +12,9 @@ package com.fermedefense.modele.ferme;
  *
  * Classe modèle pure – pas de thread, pas de dépendance UI.
  */
-public class Vache extends Animal {
+import com.fermedefense.modele.joueur.ObjetInventaire;
+
+public class Vache extends Animal implements ObjetInventaire {
 
     // ----- Constantes par défaut -----
     /** Durée de la phase bébé (ms). */
@@ -130,6 +132,11 @@ public class Vache extends Animal {
 
     public long getTempsEcoule() {
         return tempsEcoule;
+    }
+
+    @Override
+    public String getDescription() {
+        return "Vache (Revenu: " + revenuParCycle + ")";
     }
 
     /**

@@ -42,7 +42,8 @@ class AttaqueTest {
         Attaque a = new Attaque(alien);
 
         // Simuler assez de temps pour que le joueur frappe
-        a.mettreAJour(epee.getCooldownMs(), joueur, epee);
+        a.mettreAJour(epee.getCooldownMs(), joueur);
+        a.frapperManuel(epee);
 
         assertEquals(ResultatCombat.VICTOIRE, a.getResultat());
         assertTrue(a.isTerminee());
@@ -55,7 +56,8 @@ class AttaqueTest {
         Attaque a = new Attaque(alien);
 
         // Joueur frappe d'abord, mais l'alien riposte et tue
-        a.mettreAJour(100, joueur, epee);
+        a.mettreAJour(100, joueur);
+        a.frapperManuel(epee);
 
         assertEquals(ResultatCombat.DEFAITE, a.getResultat());
         assertFalse(joueur.isVivant());
@@ -72,13 +74,15 @@ class AttaqueTest {
         assertEquals(2, att.getNombreAliensRestants());
 
         // Premier coup tue A1
-        att.mettreAJour(epee.getCooldownMs(), joueur, epee);
+        att.mettreAJour(epee.getCooldownMs(), joueur);
+        att.frapperManuel(epee);
         assertFalse(a1.isVivant());
         assertEquals(ResultatCombat.EN_COURS, att.getResultat());
         assertEquals(1, att.getNombreAliensRestants());
 
         // Second coup tue A2
-        att.mettreAJour(epee.getCooldownMs(), joueur, epee);
+        att.mettreAJour(epee.getCooldownMs(), joueur);
+        att.frapperManuel(epee);
         assertEquals(ResultatCombat.VICTOIRE, att.getResultat());
         assertEquals(0, att.getNombreAliensRestants());
     }
@@ -90,7 +94,8 @@ class AttaqueTest {
         Extraterrestre alien = new Extraterrestre("Stats", 50, 5, 800);
         Attaque a = new Attaque(alien);
 
-        a.mettreAJour(epee.getCooldownMs(), joueur, epee);
+        a.mettreAJour(epee.getCooldownMs(), joueur);
+        a.frapperManuel(epee);
 
         assertTrue(a.getTotalDegatsInfliges() > 0);
         // L'alien a aussi eu le temps de frapper (son cd 800 < epee cd 1000)
@@ -103,11 +108,13 @@ class AttaqueTest {
     void mettreAJourApresVictoireNeChangePlusRien() {
         Extraterrestre alien = new Extraterrestre("Faible", 1, 5, 2000);
         Attaque a = new Attaque(alien);
-        a.mettreAJour(epee.getCooldownMs(), joueur, epee);
+        a.mettreAJour(epee.getCooldownMs(), joueur);
+        a.frapperManuel(epee);
         assertEquals(ResultatCombat.VICTOIRE, a.getResultat());
 
         int pvAvant = joueur.getPointsDeVie();
-        a.mettreAJour(10000, joueur, epee);
+        a.mettreAJour(10000, joueur);
+        a.frapperManuel(epee);
         assertEquals(pvAvant, joueur.getPointsDeVie()); // rien n'a changé
     }
 
@@ -131,7 +138,8 @@ class AttaqueTest {
 
         // Simuler 60 secondes de combat (tick de 100ms)
         for (int i = 0; i < 600 && !a.isTerminee(); i++) {
-            a.mettreAJour(100, joueur, epee);
+            a.mettreAJour(100, joueur);
+            a.frapperManuel(epee);
         }
 
         assertTrue(a.isTerminee(), "Le combat doit finir en 60 secondes");
