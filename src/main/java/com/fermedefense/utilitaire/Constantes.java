@@ -7,13 +7,13 @@ public final class Constantes {
 
     private Constantes() {}
 
-    // --- Fenêtre ---
-    public static final int LARGEUR_FENETRE = 900;
+    // --- Fenêtre & Carte ---
+    public static final int LARGEUR_CARTE = 900;
     public static final int HAUTEUR_FENETRE = 500;
     public static final String TITRE_FENETRE = "Alien Farm Defense";
-
-    // --- Carte ---
-    public static final int LARGEUR_CARTE = LARGEUR_FENETRE;
+    
+    public static final int LARGEUR_SIDEBAR = 220;
+    public static final int LARGEUR_FENETRE = LARGEUR_CARTE + LARGEUR_SIDEBAR;
     public static final int HAUTEUR_CARTE = HAUTEUR_FENETRE - 60; // place pour le HUD
 
     // --- Joueur ---

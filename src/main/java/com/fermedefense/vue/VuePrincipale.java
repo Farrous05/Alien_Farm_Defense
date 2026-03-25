@@ -57,11 +57,6 @@ public class VuePrincipale extends JFrame {
     private final ControleurJeu controleurJeu;
     private final ControleurMarche controleurMarche;
 
-    /** Durée de l'action de récolte (ms). */
-    private static final long DUREE_RECOLTE = 2000;
-    /** Durée de l'action d'achat (ms). */
-    private static final long DUREE_ACHAT = 1500;
-
     /** Message temporaire affiché à l'écran. */
     private String messageFlash = null;
     private long messageFlashExpire = 0;
@@ -82,7 +77,7 @@ public class VuePrincipale extends JFrame {
         this.vueCombat = new VueCombat();
         this.vueActionJoueur = new VueActionJoueur();
         this.vueAliens = new VueAliens();
-        this.vueInventaire = new VueInventaire(joueur.getInventaire(), Constantes.LARGEUR_CARTE - 220, 50);
+        this.vueInventaire = new VueInventaire(joueur.getInventaire(), Constantes.LARGEUR_CARTE + 10, 50);
         this.panneauJeu = new PanneauJeu();
 
         // Layout
@@ -132,8 +127,10 @@ public class VuePrincipale extends JFrame {
     private class PanneauJeu extends JPanel {
 
         PanneauJeu() {
-            setPreferredSize(new Dimension(Constantes.LARGEUR_CARTE, Constantes.HAUTEUR_CARTE));
-            setBackground(Color.BLACK);
+            setPreferredSize(new Dimension(Constantes.LARGEUR_FENETRE, Constantes.HAUTEUR_CARTE));
+            setBackground(new Color(20, 30, 40)); // Darker background for the sidebar area
+            
+
             // MouseListener :
             // - Clic droit : sélectionne l'article
             // - Clic gauche : achète l'article sélectionné si le joueur est dans la zone marché
@@ -160,10 +157,10 @@ public class VuePrincipale extends JFrame {
                                     vueMarche.setSelection(idx);
                                     repaint();
                                 } else if (e.getButton() == java.awt.event.MouseEvent.BUTTON1) {
-                                    // Clic gauche : achète l'article
+                                    // Clic gauche : achète l'article instantanément
                                     vueMarche.setSelection(idx);
                                     repaint();
-                                    lancerAchat();
+                                    acheter();
                                 }
                             }
                         }
@@ -236,6 +233,10 @@ public class VuePrincipale extends JFrame {
             int[] zf = carte.getZoneFerme();
             int[] zm = carte.getZoneMarche();
 
+            // Background de la carte
+            g2.setColor(Color.BLACK);
+            g2.fillRect(0, 0, Constantes.LARGEUR_CARTE, getHeight());
+
             // Récolte automatique de la monnaie produite par les vaches
             int totalAuto = ferme.recolterTout();
             if (totalAuto > 0) {
@@ -246,14 +247,35 @@ public class VuePrincipale extends JFrame {
             vueFerme.dessiner(g2, zf[0], zf[1], zf[2], zf[3]);
             vueMarche.dessiner(g2, zm[0], zm[1], zm[2], zm[3]);
 
-            // Séparateur
+            // Séparateur entre marché et ferme
             g2.setColor(Color.LIGHT_GRAY);
             g2.drawLine(zm[0], 0, zm[0], getHeight());
+
+            // Séparateur sidebar (fin de la carte)
+            g2.setColor(new Color(80, 80, 90));
+            g2.drawLine(Constantes.LARGEUR_CARTE, 0, Constantes.LARGEUR_CARTE, getHeight());
 
             // Joueur
             int jx = (int) joueur.getX();
             int jy = (int) joueur.getY();
             int jt = joueur.getTaille();
+            Zone zone = carte.getZoneA(jx + jt / 2, jy + jt / 2);
+
+            // Survol du marché par le personnage
+            if (zone == Zone.MARCHE) {
+                int startY = zm[1] + 45;
+                int itemH = 50;
+                int py = jy + jt / 2; // centre y du joueur
+                int idx = (py - startY) / itemH;
+                if (idx >= 0 && idx < marche.getArticles().size()) {
+                    vueMarche.setSelection(idx);
+                } else {
+                    vueMarche.setSelection(-1);
+                }
+            } else {
+                vueMarche.setSelection(-1);
+            }
+
             g2.setColor(new Color(220, 120, 50));
             g2.fillRoundRect(jx, jy, jt, jt, 8, 8);
             g2.setColor(Color.WHITE);
@@ -265,7 +287,6 @@ public class VuePrincipale extends JFrame {
             vueActionJoueur.dessiner(g2, action, jx, jy, jt);
 
             // Zone indicator
-            Zone zone = carte.getZoneA(jx + jt / 2, jy + jt / 2);
             if (zone != null) {
                 g2.setColor(new Color(255, 255, 255, 150));
                 g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
@@ -286,6 +307,9 @@ public class VuePrincipale extends JFrame {
             
             // Inventaire
             vueInventaire.dessiner(g2);
+
+            // Tutorial
+            dessinerTutoriel(g2);
 
             // Aliens visuels sur la carte (vague intermédiaire)
             ControleurAttaque ctrlAttaque = controleurJeu.getControleurAttaque();
@@ -364,6 +388,43 @@ public class VuePrincipale extends JFrame {
             FontMetrics fm2 = g2.getFontMetrics();
             g2.drawString(sub, (getWidth() - fm2.stringWidth(sub)) / 2, getHeight() / 2 + 30);
         }
+
+        private void dessinerTutoriel(Graphics2D g2) {
+            int x = Constantes.LARGEUR_CARTE + 10;
+            int y = 300;
+            
+            g2.setColor(new Color(255, 255, 255, 200));
+            g2.setFont(new Font("SansSerif", Font.BOLD, 12));
+            g2.drawString("TUTORIEL & CONTRÔLES", x, y);
+            
+            y += 20;
+            g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            g2.setColor(new Color(200, 200, 200));
+            
+            String[] lignes = {
+                "Deplacements : Z Q S D (ou flèches)",
+                "Marché : Alignez votre personnage",
+                "         avec un objet et appuyez",
+                "         sur [R] pour l'acheter",
+                "         instantanément.",
+                "",
+                "Inventaire :",
+                " - Clic sur Vache (Ferme) : Déploie",
+                " - Clic sur Arme (Combat) : Attaque",
+                "",
+                "Divers :",
+                " [P] : Pause",
+                " [Espace] : Avancer après victoire",
+                "            (ou recommencer)",
+                "",
+                "Récolte : Automatique !"
+            };
+            
+            for (String ligne : lignes) {
+                g2.drawString(ligne, x, y);
+                y += 15;
+            }
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -400,27 +461,11 @@ public class VuePrincipale extends JFrame {
                     (int) joueur.getY() + joueur.getTaille() / 2);
 
             switch (e.getKeyCode()) {
-                // --- Marché : sélectionner article ---
-                case KeyEvent.VK_1:
-                    if (zone == Zone.MARCHE) vueMarche.setSelection(0);
-                    break;
-                case KeyEvent.VK_2:
-                    if (zone == Zone.MARCHE) vueMarche.setSelection(1);
-                    break;
-                case KeyEvent.VK_TAB:
-                    if (zone == Zone.MARCHE) vueMarche.selectionSuivante();
-                    break;
-
                 // --- Marché : acheter ---
-                case KeyEvent.VK_ENTER:
-                    if (zone == Zone.MARCHE) lancerAchat();
-                    break;
-
-                // --- Ferme : récolter ---
                 case KeyEvent.VK_R:
-                    if (zone == Zone.FERME) lancerRecolte();
+                    if (zone == Zone.MARCHE) acheter();
                     break;
-
+                    
                 // --- Pause ---
                 case KeyEvent.VK_P:
                     if (partie.getEtat() == EtatJeu.EN_COURS) {
@@ -432,46 +477,8 @@ public class VuePrincipale extends JFrame {
         }
     }
 
-    private void lancerAchat() {
-        ActionDuree current = controleurJeu.getActionEnCours();
-        if (current != null && !current.isTerminee()) return; // already busy
-        ActionDuree action = new ActionDuree(ActionDuree.TypeAction.ACHAT, DUREE_ACHAT) {
-            @Override
-            public boolean mettreAJour(long deltaMs) {
-                boolean done = super.mettreAJour(deltaMs);
-                if (done) acheter();
-                return done;
-            }
-        };
-        controleurJeu.setActionEnCours(action);
-    }
-
-    private void lancerRecolte() {
-        ActionDuree current = controleurJeu.getActionEnCours();
-        if (current != null && !current.isTerminee()) return; // already busy
-        ActionDuree action = new ActionDuree(ActionDuree.TypeAction.RECOLTE, DUREE_RECOLTE) {
-            @Override
-            public boolean mettreAJour(long deltaMs) {
-                boolean done = super.mettreAJour(deltaMs);
-                if (done) recolter();
-                return done;
-            }
-        };
-        controleurJeu.setActionEnCours(action);
-    }
-
     private void acheter() {
         controleurMarche.acheter(vueMarche.getSelection());
         flash(controleurMarche.getDernierMessage());
-    }
-
-    private void recolter() {
-        int total = ferme.recolterTout();
-        if (total > 0) {
-            joueur.ajouterMonnaie(total);
-            flash("Récolté " + total + " pièces !");
-        } else {
-            flash("Rien à récolter.");
-        }
     }
 }
