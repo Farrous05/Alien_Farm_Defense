@@ -214,6 +214,8 @@ public class VuePrincipale extends JFrame {
                             } else if (ctrlCombat != null && ctrlCombat.isEnCombat()) {
                                 ctrlCombat.getAttaqueBoss().frapperManuel(arme);
                                 vueInventaire.setSelection(-1, -1);
+                            } else if ((ctrlAttaque != null && ctrlAttaque.isActif()) || (ctrlCombat != null && ctrlCombat.isActif())) {
+                                flash("Alien trop loin ! Laissez-les approcher.");
                             } else {
                                 flash("Aucun alien à combattre !");
                             }
@@ -410,7 +412,10 @@ public class VuePrincipale extends JFrame {
                 "",
                 "Inventaire :",
                 " - Clic sur Vache (Ferme) : Déploie",
-                " - Clic sur Arme (Combat) : Attaque",
+                "",
+                "Combat :",
+                " - Appuyez sur [A] pour utiliser",
+                "   votre arme et attaquer !",
                 "",
                 "Divers :",
                 " [P] : Pause",
@@ -466,6 +471,11 @@ public class VuePrincipale extends JFrame {
                     if (zone == Zone.MARCHE) acheter();
                     break;
                     
+                // --- Attaque : utiliser la première arme ---
+                case KeyEvent.VK_A:
+                    attaquerAvecPremiereArme();
+                    break;
+
                 // --- Pause ---
                 case KeyEvent.VK_P:
                     if (partie.getEtat() == EtatJeu.EN_COURS) {
@@ -480,5 +490,38 @@ public class VuePrincipale extends JFrame {
     private void acheter() {
         controleurMarche.acheter(vueMarche.getSelection());
         flash(controleurMarche.getDernierMessage());
+    }
+
+    private void attaquerAvecPremiereArme() {
+        ControleurAttaque ctrlAttaque = controleurJeu.getControleurAttaque();
+        ControleurCombat ctrlCombat = controleurJeu.getControleurCombat();
+
+        com.fermedefense.modele.combat.Arme arme = null;
+        com.fermedefense.modele.joueur.Inventaire inv = joueur.getInventaire();
+        for (int i = 0; i < inv.getLignes(); i++) {
+            for (int j = 0; j < inv.getColonnes(); j++) {
+                com.fermedefense.modele.joueur.ObjetInventaire obj = inv.getObjet(i, j);
+                if (obj instanceof com.fermedefense.modele.combat.Arme) {
+                    arme = (com.fermedefense.modele.combat.Arme) obj;
+                    break;
+                }
+            }
+            if (arme != null) break;
+        }
+
+        if (arme == null) {
+            flash("Aucune arme dans l'inventaire !");
+            return;
+        }
+
+        if (ctrlAttaque != null && ctrlAttaque.isEnCombat()) {
+            ctrlAttaque.getAttaqueCourante().frapperManuel(arme);
+        } else if (ctrlCombat != null && ctrlCombat.isEnCombat()) {
+            ctrlCombat.getAttaqueBoss().frapperManuel(arme);
+        } else if ((ctrlAttaque != null && ctrlAttaque.isActif()) || (ctrlCombat != null && ctrlCombat.isActif())) {
+            flash("Alien trop loin ! Laissez-les approcher.");
+        } else {
+            flash("Aucun alien à combattre !");
+        }
     }
 }

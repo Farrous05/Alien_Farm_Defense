@@ -25,6 +25,7 @@ public class Main {
                     Constantes.PV_MAX_JOUEUR,
                     Constantes.MONNAIE_INIT
             );
+            joueur.getInventaire().ajouterObjet(com.fermedefense.modele.combat.Arme.EPEE);
             Ferme ferme = new Ferme();
             Marche marche = new Marche();
 
