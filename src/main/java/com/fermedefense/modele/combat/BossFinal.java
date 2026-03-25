@@ -20,7 +20,7 @@ public class BossFinal extends Extraterrestre {
      * @param recompense    monnaie obtenue après victoire
      */
     public BossFinal(String nom, int pointsDeVieMax, int degats, long cooldownMs, int recompense) {
-        super(nom, pointsDeVieMax, degats, cooldownMs);
+        super(nom, pointsDeVieMax, degats, cooldownMs, Long.MAX_VALUE);
         this.recompense = recompense;
     }
 

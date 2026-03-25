@@ -99,7 +99,8 @@ public class ControleurAttaque {
         com.fermedefense.modele.jeu.Zone zone = carte.getZoneA(jx + jt / 2, jy + jt / 2);
         attaqueSansDefense = (zone != com.fermedefense.modele.jeu.Zone.FERME);
 
-        List<Extraterrestre> aliens = niveau.creerVague(indexVague);
+        int nbCows = ferme.getNombreAnimaux();
+        List<Extraterrestre> aliens = niveau.creerVagueDynamique(indexVague, Math.max(1, nbCows));
         attaqueCourante = attaqueSansDefense ? null : new Attaque(aliens);
         derniereVacheEnlevee = null;
 
@@ -111,7 +112,7 @@ public class ControleurAttaque {
             double cibleY = fermeY + 60 + (i / 3) * 50 + (i % 2) * 20;
             double departY = cibleY + (Math.random() - 0.5) * 40;
             aliensVisuels.add(new AlienVisuel(departX + i * 30, departY,
-                    cibleX, cibleY, VITESSE_ALIEN_VISUEL));
+                    cibleX, cibleY, VITESSE_ALIEN_VISUEL, aliens.get(i).getType()));
         }
 
         phase = PhaseAttaque.APPROCHE;
@@ -159,6 +160,19 @@ public class ControleurAttaque {
                 for (AlienVisuel av : aliensVisuels) {
                     av.mettreAJour(deltaMs);
                 }
+
+                int abductions = attaqueCourante.getVachesAbducteesCeTick();
+                if (abductions > 0) {
+                    for (int i = 1; i <= abductions; i++) {
+                        ferme.enleverDerniereVache();
+                        int idxFui = attaqueCourante.getIndexAlienCourant() - i;
+                        if (idxFui >= 0 && idxFui < aliensVisuels.size()) {
+                            aliensVisuels.get(idxFui).setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
+                        }
+                    }
+                    messageFlash = "Alerte : Un alien a volé une vache !";
+                }
+
                 if (attaqueCourante.isTerminee()) {
                     // Transition vers le départ
                     phase = PhaseAttaque.DEPART;
@@ -166,14 +180,18 @@ public class ControleurAttaque {
                         vaguesTerminees++;
                         derniereVacheEnlevee = null;
                         for (AlienVisuel av : aliensVisuels) {
-                            av.setEtat(AlienVisuel.EtatVisuel.FUITE);
+                            if (av.getEtat() == AlienVisuel.EtatVisuel.COMBAT) {
+                                av.setEtat(AlienVisuel.EtatVisuel.FUITE);
+                            }
                         }
                     } else {
                         derniereVacheEnlevee = ferme.enleverDerniereVache();
                         for (AlienVisuel av : aliensVisuels) {
-                            av.setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
+                            if (av.getEtat() == AlienVisuel.EtatVisuel.COMBAT) {
+                                av.setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
+                            }
                         }
-                        messageFlash = "Une vache a été enlevée !";
+                        messageFlash = "Défaite : Une vache a été enlevée !";
                     }
                 }
                 break;

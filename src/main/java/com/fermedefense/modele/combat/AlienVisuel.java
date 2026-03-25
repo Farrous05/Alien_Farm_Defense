@@ -22,17 +22,23 @@ public class AlienVisuel {
     private final double departX;
     private EtatVisuel etat;
     private final double vitesse; // pixels par seconde
+    private final Extraterrestre.TypeAlien type;
 
     /** Temps accumulé dans l'état courant (pour animations). */
     private long tempsEtat;
 
     public AlienVisuel(double departX, double departY, double cibleX, double cibleY, double vitesse) {
+        this(departX, departY, cibleX, cibleY, vitesse, Extraterrestre.TypeAlien.NORMAL);
+    }
+
+    public AlienVisuel(double departX, double departY, double cibleX, double cibleY, double vitesse, Extraterrestre.TypeAlien type) {
         this.x = departX;
         this.y = departY;
         this.departX = departX;
         this.cibleX = cibleX;
         this.cibleY = cibleY;
         this.vitesse = vitesse;
+        this.type = type;
         this.etat = EtatVisuel.APPROCHE;
         this.tempsEtat = 0;
     }
@@ -103,4 +109,5 @@ public class AlienVisuel {
     public double getY() { return y; }
     public EtatVisuel getEtat() { return etat; }
     public long getTempsEtat() { return tempsEtat; }
+    public Extraterrestre.TypeAlien getType() { return type; }
 }

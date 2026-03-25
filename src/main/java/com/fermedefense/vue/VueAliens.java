@@ -37,7 +37,15 @@ public class VueAliens {
         int ay = (int) av.getY();
 
         // Body (oval)
-        g2.setColor(ALIEN_BODY);
+        if (av.getType() == com.fermedefense.modele.combat.Extraterrestre.TypeAlien.RUNNER) {
+            g2.setColor(new Color(255, 200, 50));
+            size = (int)(size * 0.8);
+        } else if (av.getType() == com.fermedefense.modele.combat.Extraterrestre.TypeAlien.TANK) {
+            g2.setColor(new Color(80, 80, 255));
+            size = (int)(size * 1.3);
+        } else {
+            g2.setColor(ALIEN_BODY);
+        }
         g2.fillOval(ax, ay, size, (int) (size * 1.2));
 
         // Eyes

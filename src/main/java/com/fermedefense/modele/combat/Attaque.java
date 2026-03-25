@@ -36,6 +36,8 @@ public class Attaque {
     /** Dégâts totaux reçus par le joueur pendant cette vague. */
     private int totalDegatsRecus;
 
+    private int vachesAbducteesCeTick;
+
     public Attaque(List<Extraterrestre> aliens) {
         this.aliens = new ArrayList<>(aliens);
         this.indexAlienCourant = 0;
@@ -44,6 +46,7 @@ public class Attaque {
         this.resultat = ResultatCombat.EN_COURS;
         this.totalDegatsInfliges = 0;
         this.totalDegatsRecus = 0;
+        this.vachesAbducteesCeTick = 0;
     }
 
     /**
@@ -83,12 +86,26 @@ public class Attaque {
      * @param joueur  le joueur (subit les dégâts de l'alien)
      */
     public void mettreAJour(long deltaMs, Joueur joueur) {
+        vachesAbducteesCeTick = 0;
+
         if (resultat != ResultatCombat.EN_COURS) return;
 
         Extraterrestre alien = getAlienCourant();
         if (alien == null) {
             resultat = ResultatCombat.VICTOIRE;
             return;
+        }
+
+        // Gérer l'abduction par temps
+        alien.reduireTimerAbduction(deltaMs);
+        if (alien.isAbductionPrete()) {
+             vachesAbducteesCeTick++;
+             indexAlienCourant++;
+             if (indexAlienCourant >= aliens.size()) {
+                 resultat = ResultatCombat.VICTOIRE;
+             }
+             tempsCooldownAlien = 0;
+             return;
         }
 
         // Réduire les cooldowns
@@ -141,6 +158,7 @@ public class Attaque {
 
     public int getTotalDegatsInfliges() { return totalDegatsInfliges; }
     public int getTotalDegatsRecus() { return totalDegatsRecus; }
+    public int getVachesAbducteesCeTick() { return vachesAbducteesCeTick; }
 
     @Override
     public String toString() {

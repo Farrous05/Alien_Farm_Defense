@@ -30,7 +30,7 @@ class AttaqueTest {
 
     @Test
     void combatDebutEnCours() {
-        Attaque a = new Attaque(new Extraterrestre("A1", 30, 5, 800));
+        Attaque a = new Attaque(new Extraterrestre("A1", 30, 5, 800, 10000L));
         assertEquals(ResultatCombat.EN_COURS, a.getResultat());
         assertFalse(a.isTerminee());
     }
@@ -38,7 +38,7 @@ class AttaqueTest {
     @Test
     void victoireSiAlienMeurt() {
         // Alien avec 10 PV, épée fait 15 dégâts → un coup suffit
-        Extraterrestre alien = new Extraterrestre("Faible", 10, 5, 2000);
+        Extraterrestre alien = new Extraterrestre("Faible", 10, 5, 2000, 10000L);
         Attaque a = new Attaque(alien);
 
         // Simuler assez de temps pour que le joueur frappe
@@ -52,7 +52,7 @@ class AttaqueTest {
     @Test
     void defaiteSiJoueurMeurt() {
         // Alien très puissant : 999 dégâts, cooldown 100ms
-        Extraterrestre alien = new Extraterrestre("Tueur", 9999, 999, 100);
+        Extraterrestre alien = new Extraterrestre("Tueur", 9999, 999, 100, 10000L);
         Attaque a = new Attaque(alien);
 
         // Joueur frappe d'abord, mais l'alien riposte et tue
@@ -67,8 +67,8 @@ class AttaqueTest {
 
     @Test
     void vagueDeDeuxAliens() {
-        Extraterrestre a1 = new Extraterrestre("A1", 10, 3, 5000); // faible, lent
-        Extraterrestre a2 = new Extraterrestre("A2", 10, 3, 5000);
+        Extraterrestre a1 = new Extraterrestre("A1", 10, 3, 5000, 10000L); // faible, lent
+        Extraterrestre a2 = new Extraterrestre("A2", 10, 3, 5000, 10000L);
         Attaque att = new Attaque(List.of(a1, a2));
 
         assertEquals(2, att.getNombreAliensRestants());
@@ -91,7 +91,7 @@ class AttaqueTest {
 
     @Test
     void statistiquesDegatsSontTrackes() {
-        Extraterrestre alien = new Extraterrestre("Stats", 50, 5, 800);
+        Extraterrestre alien = new Extraterrestre("Stats", 50, 5, 800, 10000L);
         Attaque a = new Attaque(alien);
 
         a.mettreAJour(epee.getCooldownMs(), joueur);
@@ -106,7 +106,7 @@ class AttaqueTest {
 
     @Test
     void mettreAJourApresVictoireNeChangePlusRien() {
-        Extraterrestre alien = new Extraterrestre("Faible", 1, 5, 2000);
+        Extraterrestre alien = new Extraterrestre("Faible", 1, 5, 2000, 10000L);
         Attaque a = new Attaque(alien);
         a.mettreAJour(epee.getCooldownMs(), joueur);
         a.frapperManuel(epee);
@@ -133,7 +133,7 @@ class AttaqueTest {
     @Test
     void combatSimulationFinitToujours() {
         // Alien résistant : 200 PV, 8 dégâts, cooldown 1s
-        Extraterrestre alien = new Extraterrestre("Tank", 200, 8, 1000);
+        Extraterrestre alien = new Extraterrestre("Tank", 200, 8, 1000, 10000L);
         Attaque a = new Attaque(alien);
 
         // Simuler 60 secondes de combat (tick de 100ms)

@@ -67,11 +67,20 @@ public class ControleurMarche {
 
         if (article.getType() == TypeArticle.VACHE) {
             joueur.getInventaire().ajouterObjet(new Vache(
-                    article.getNom() + "#" + (ferme.getNombreAnimaux() + 1), 0, 0));
+                    "Vache#" + (ferme.getNombreAnimaux() + 1), 0, 0));
             dernierMessage = "Vache achetée !";
         } else if (article.getType() == TypeArticle.ARME) {
-            joueur.getInventaire().ajouterObjet(new Arme(article.getNom(), RAYON_LASER.getDegats(), RAYON_LASER.getCooldownMs()));
-            dernierMessage = "Arme ajoutée à l'inventaire : " + article.getNom();
+            Arme a = Arme.EPEE;
+            if (article.getNom().equals("Shotgun")) a = Arme.SHOTGUN;
+            if (article.getNom().equals("Minigun")) a = Arme.MINIGUN;
+            joueur.getInventaire().ajouterObjet(a);
+            dernierMessage = "Arme achetée : " + article.getNom();
+        } else if (article.getType() == TypeArticle.POTION) {
+            joueur.getInventaire().ajouterObjet(new com.fermedefense.modele.joueur.Potion());
+            dernierMessage = "Potion achetée !";
+        } else if (article.getType() == TypeArticle.BOMBE) {
+            joueur.getInventaire().ajouterObjet(new com.fermedefense.modele.combat.Bombe());
+            dernierMessage = "Bombe achetée !";
         }
 
         return ResultatAchat.OK;

@@ -16,13 +16,36 @@ public class Extraterrestre {
     private final int pointsDeVieMax;
     private final int degats;
     private final long cooldownMs; // temps entre deux attaques (ms)
+    private long timerAbductionMs; // temps avant abduction d'une vache
+    public enum TypeAlien { NORMAL, RUNNER, TANK }
+    private final TypeAlien type;
 
-    public Extraterrestre(String nom, int pointsDeVieMax, int degats, long cooldownMs) {
+    public Extraterrestre(String nom, int pointsDeVieMax, int degats, long cooldownMs, long timerAbductionMs) {
+        this(nom, pointsDeVieMax, degats, cooldownMs, timerAbductionMs, TypeAlien.NORMAL);
+    }
+
+    public Extraterrestre(String nom, int pointsDeVieMax, int degats, long cooldownMs, long timerAbductionMs, TypeAlien type) {
         this.nom = nom;
         this.pointsDeVieMax = pointsDeVieMax;
         this.pointsDeVie = pointsDeVieMax;
         this.degats = degats;
         this.cooldownMs = cooldownMs;
+        this.timerAbductionMs = timerAbductionMs;
+        this.type = type;
+    }
+
+    public TypeAlien getType() { return type; }
+
+    public void reduireTimerAbduction(long deltaMs) {
+        timerAbductionMs -= deltaMs;
+    }
+
+    public boolean isAbductionPrete() {
+        return timerAbductionMs <= 0;
+    }
+
+    public long getTimerAbductionMs() {
+        return timerAbductionMs;
     }
 
     /**

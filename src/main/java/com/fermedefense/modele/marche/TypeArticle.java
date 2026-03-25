@@ -6,4 +6,6 @@ package com.fermedefense.modele.marche;
 public enum TypeArticle {
     VACHE,
     ARME,
+    POTION,
+    BOMBE
 }

@@ -77,7 +77,7 @@ public class VuePrincipale extends JFrame {
         this.vueCombat = new VueCombat();
         this.vueActionJoueur = new VueActionJoueur();
         this.vueAliens = new VueAliens();
-        this.vueInventaire = new VueInventaire(joueur.getInventaire(), Constantes.LARGEUR_CARTE + 10, 50);
+        this.vueInventaire = new VueInventaire(joueur, Constantes.LARGEUR_CARTE + 10, 50);
         this.panneauJeu = new PanneauJeu();
 
         // Layout
@@ -218,6 +218,29 @@ public class VuePrincipale extends JFrame {
                                 flash("Alien trop loin ! Laissez-les approcher.");
                             } else {
                                 flash("Aucun alien à combattre !");
+                            }
+                        } else if (obj instanceof com.fermedefense.modele.joueur.Potion) {
+                            joueur.soigner(50);
+                            joueur.getInventaire().retirerObjet(lig, col);
+                            vueInventaire.setSelection(-1, -1);
+                            flash("Vous avez bu une potion ! (+50 PV)");
+                        } else if (obj instanceof com.fermedefense.modele.combat.Bombe) {
+                            ControleurAttaque ctrlAttaque = controleurJeu.getControleurAttaque();
+                            ControleurCombat ctrlCombat = controleurJeu.getControleurCombat();
+                            
+                            if (ctrlAttaque != null && ctrlAttaque.isEnCombat()) {
+                                com.fermedefense.modele.combat.Extraterrestre alien = ctrlAttaque.getAttaqueCourante().getAlienCourant();
+                                if (alien != null) alien.subirDegats(150);
+                                joueur.getInventaire().retirerObjet(lig, col);
+                                vueInventaire.setSelection(-1, -1);
+                                flash("BOUM ! -150 PV sur l'alien !");
+                            } else if (ctrlCombat != null && ctrlCombat.isEnCombat()) {
+                                ctrlCombat.getBoss().subirDegats(150);
+                                joueur.getInventaire().retirerObjet(lig, col);
+                                vueInventaire.setSelection(-1, -1);
+                                flash("BOUM ! -150 PV sur le boss !");
+                            } else {
+                                flash("Gardez la bombe pour un combat !");
                             }
                         }
                         repaint();
@@ -411,11 +434,12 @@ public class VuePrincipale extends JFrame {
                 "         instantanément.",
                 "",
                 "Inventaire :",
-                " - Clic sur Vache (Ferme) : Déploie",
+                " - Clic G : Déploie vache/Attaque",
+                " - [E] : Changer d'arme",
                 "",
                 "Combat :",
                 " - Appuyez sur [A] pour utiliser",
-                "   votre arme et attaquer !",
+                "   votre arme équipée et attaquer",
                 "",
                 "Divers :",
                 " [P] : Pause",
@@ -471,9 +495,16 @@ public class VuePrincipale extends JFrame {
                     if (zone == Zone.MARCHE) acheter();
                     break;
                     
-                // --- Attaque : utiliser la première arme ---
+                // --- Attaque : utiliser l'arme équipée ---
                 case KeyEvent.VK_A:
-                    attaquerAvecPremiereArme();
+                    attaquerAvecArmeEquipee();
+                    break;
+                    
+                // --- Changer d'arme ---
+                case KeyEvent.VK_E:
+                    joueur.cycleArme();
+                    com.fermedefense.modele.combat.Arme eq = joueur.getArmeEquipee();
+                    flash("Arme équipée: " + (eq != null ? eq.getNom() : "Aucune"));
                     break;
 
                 // --- Pause ---
@@ -492,25 +523,14 @@ public class VuePrincipale extends JFrame {
         flash(controleurMarche.getDernierMessage());
     }
 
-    private void attaquerAvecPremiereArme() {
+    private void attaquerAvecArmeEquipee() {
         ControleurAttaque ctrlAttaque = controleurJeu.getControleurAttaque();
         ControleurCombat ctrlCombat = controleurJeu.getControleurCombat();
 
-        com.fermedefense.modele.combat.Arme arme = null;
-        com.fermedefense.modele.joueur.Inventaire inv = joueur.getInventaire();
-        for (int i = 0; i < inv.getLignes(); i++) {
-            for (int j = 0; j < inv.getColonnes(); j++) {
-                com.fermedefense.modele.joueur.ObjetInventaire obj = inv.getObjet(i, j);
-                if (obj instanceof com.fermedefense.modele.combat.Arme) {
-                    arme = (com.fermedefense.modele.combat.Arme) obj;
-                    break;
-                }
-            }
-            if (arme != null) break;
-        }
+        com.fermedefense.modele.combat.Arme arme = joueur.getArmeEquipee();
 
         if (arme == null) {
-            flash("Aucune arme dans l'inventaire !");
+            flash("Aucune arme équipée ! Achetez-en une ou équipez-la avec [E].");
             return;
         }
 

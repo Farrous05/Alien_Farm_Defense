@@ -9,6 +9,7 @@ import com.fermedefense.modele.joueur.ObjetInventaire;
 
 public class VueInventaire {
     
+    private final com.fermedefense.modele.joueur.Joueur joueur;
     private final Inventaire inventaire;
     private final int x;
     private final int y;
@@ -17,8 +18,9 @@ public class VueInventaire {
     private int selectionLigne = -1;
     private int selectionColonne = -1;
 
-    public VueInventaire(Inventaire inventaire, int x, int y) {
-        this.inventaire = inventaire;
+    public VueInventaire(com.fermedefense.modele.joueur.Joueur joueur, int x, int y) {
+        this.joueur = joueur;
+        this.inventaire = joueur.getInventaire();
         this.x = x;
         this.y = y;
     }
@@ -54,6 +56,13 @@ public class VueInventaire {
                 // Dessiner l'objet
                 ObjetInventaire obj = inventaire.getObjet(i, j);
                 if (obj != null) {
+                    if (obj == joueur.getArmeEquipee()) {
+                        g2.setColor(new Color(255, 150, 0, 150));
+                        g2.fillRect(cx + 1, cy + 1, tailleCase - 1, tailleCase - 1);
+                        g2.setColor(Color.WHITE);
+                        g2.setFont(new Font("SansSerif", Font.BOLD, 10));
+                        g2.drawString("E", cx + 2, cy + 10);
+                    }
                     g2.setColor(Color.WHITE);
                     g2.setFont(new Font("SansSerif", Font.BOLD, 16));
                     g2.drawString(obj.getNom().substring(0, 1).toUpperCase(), cx + 14, cy + 25);

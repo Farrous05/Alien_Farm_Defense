@@ -73,19 +73,44 @@ public class Niveau {
     }
 
     /**
-     * Crée la liste d'aliens pour une vague intermédiaire.
+     * Crée la liste d'aliens pour une vague intermédiaire, en fonction du nombre de vaches.
      *
      * @param indexVague index de la vague (0-based)
+     * @param nbCows nombre de vaches déployées
      * @return liste d'aliens pour cette vague
      */
-    public List<Extraterrestre> creerVague(int indexVague) {
+    public List<Extraterrestre> creerVagueDynamique(int indexVague, int nbCows) {
         List<Extraterrestre> aliens = new ArrayList<>();
-        for (int i = 0; i < aliensParVague; i++) {
+        int aliensToSpawn = Math.max(1, nbCows); // Minimum 1 alien
+        long timerAbduction = Math.max(3000, 10000 - (numero - 1) * 1000L); // 10s au lvl 1, 9s au lvl 2...
+
+        for (int i = 0; i < aliensToSpawn; i++) {
+            Extraterrestre.TypeAlien type = Extraterrestre.TypeAlien.NORMAL;
+            double rand = Math.random();
+            if (numero >= 2) {
+                if (rand < 0.2) type = Extraterrestre.TypeAlien.RUNNER;
+                else if (rand > 0.8) type = Extraterrestre.TypeAlien.TANK;
+            }
+            int pv = alienPv;
+            long cd = alienCooldownMs;
+            long abduction = timerAbduction;
+            if (type == Extraterrestre.TypeAlien.RUNNER) {
+                pv = (int) (pv * 0.6);
+                cd = (long) (cd * 0.5);
+                abduction = (long) (abduction * 0.7);
+            } else if (type == Extraterrestre.TypeAlien.TANK) {
+                pv = (int) (pv * 2.5);
+                cd = (long) (cd * 1.5);
+                abduction = (long) (abduction * 1.5);
+            }
+
             aliens.add(new Extraterrestre(
                     "Alien Nv." + numero + " V" + (indexVague + 1) + "#" + (i + 1),
-                    alienPv,
+                    pv,
                     alienDegats,
-                    alienCooldownMs
+                    cd,
+                    abduction,
+                    type
             ));
         }
         return aliens;

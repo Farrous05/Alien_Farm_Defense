@@ -189,4 +189,34 @@ public class Joueur {
     public Inventaire getInventaire() {
         return inventaire;
     }
+
+    // --- Arme Equipée ---
+    
+    private int indexArmeEquipee = 0;
+
+    public com.fermedefense.modele.combat.Arme getArmeEquipee() {
+        java.util.List<com.fermedefense.modele.combat.Arme> armes = getToutesLesArmes();
+        if (armes.isEmpty()) return null;
+        if (indexArmeEquipee >= armes.size()) indexArmeEquipee = 0;
+        return armes.get(indexArmeEquipee);
+    }
+
+    public void cycleArme() {
+        java.util.List<com.fermedefense.modele.combat.Arme> armes = getToutesLesArmes();
+        if (armes.isEmpty()) return;
+        indexArmeEquipee = (indexArmeEquipee + 1) % armes.size();
+    }
+
+    public java.util.List<com.fermedefense.modele.combat.Arme> getToutesLesArmes() {
+        java.util.List<com.fermedefense.modele.combat.Arme> list = new java.util.ArrayList<>();
+        for (int i = 0; i < inventaire.getLignes(); i++) {
+            for (int j = 0; j < inventaire.getColonnes(); j++) {
+                com.fermedefense.modele.joueur.ObjetInventaire obj = inventaire.getObjet(i, j);
+                if (obj instanceof com.fermedefense.modele.combat.Arme) {
+                    list.add((com.fermedefense.modele.combat.Arme) obj);
+                }
+            }
+        }
+        return list;
+    }
 }

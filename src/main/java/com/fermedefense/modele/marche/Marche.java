@@ -9,8 +9,11 @@ public class Marche implements IMarche {
 
 	public Marche() {
 		articlesDisponibles = new ArrayList<>();
-		articlesDisponibles.add(new ArticleMarche("vache1", "Vache laitière", TypeArticle.VACHE, 50, 0));
-		articlesDisponibles.add(new ArticleMarche("arme1", "Rayon laser", TypeArticle.ARME, 120, 10));
+		articlesDisponibles.add(new ArticleMarche("vache1", "Vache", TypeArticle.VACHE, 50, 0));
+		articlesDisponibles.add(new ArticleMarche("arme1", "Shotgun", TypeArticle.ARME, 120, 50));
+		articlesDisponibles.add(new ArticleMarche("arme2", "Minigun", TypeArticle.ARME, 300, 8));
+		articlesDisponibles.add(new ArticleMarche("potion1", "Potion", TypeArticle.POTION, 30, 0));
+		articlesDisponibles.add(new ArticleMarche("bombe1", "Bombe", TypeArticle.BOMBE, 100, 0));
 	}
 
 	@Override

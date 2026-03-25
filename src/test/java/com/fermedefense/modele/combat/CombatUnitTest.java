@@ -31,7 +31,7 @@ class CombatUnitTest {
 
     @Test
     void alienPVInitiaux() {
-        Extraterrestre e = new Extraterrestre("Alien", 50, 10, 800);
+        Extraterrestre e = new Extraterrestre("Alien", 50, 10, 800, 10000L);
         assertEquals(50, e.getPointsDeVie());
         assertEquals(50, e.getPointsDeVieMax());
         assertTrue(e.isVivant());
@@ -39,7 +39,7 @@ class CombatUnitTest {
 
     @Test
     void alienSubirDegats() {
-        Extraterrestre e = new Extraterrestre("Alien", 50, 10, 800);
+        Extraterrestre e = new Extraterrestre("Alien", 50, 10, 800, 10000L);
         e.subirDegats(20);
         assertEquals(30, e.getPointsDeVie());
         assertTrue(e.isVivant());
@@ -47,7 +47,7 @@ class CombatUnitTest {
 
     @Test
     void alienMeurtQuandPVZero() {
-        Extraterrestre e = new Extraterrestre("Alien", 30, 10, 800);
+        Extraterrestre e = new Extraterrestre("Alien", 30, 10, 800, 10000L);
         e.subirDegats(30);
         assertFalse(e.isVivant());
         assertEquals(0, e.getPointsDeVie());
@@ -55,21 +55,21 @@ class CombatUnitTest {
 
     @Test
     void alienPVNePasNegatif() {
-        Extraterrestre e = new Extraterrestre("Alien", 20, 10, 800);
+        Extraterrestre e = new Extraterrestre("Alien", 20, 10, 800, 10000L);
         e.subirDegats(999);
         assertEquals(0, e.getPointsDeVie());
     }
 
     @Test
     void alienDegatsNegatifsIgnores() {
-        Extraterrestre e = new Extraterrestre("Alien", 50, 10, 800);
+        Extraterrestre e = new Extraterrestre("Alien", 50, 10, 800, 10000L);
         e.subirDegats(-10);
         assertEquals(50, e.getPointsDeVie());
     }
 
     @Test
     void alienReinitialiser() {
-        Extraterrestre e = new Extraterrestre("Alien", 50, 10, 800);
+        Extraterrestre e = new Extraterrestre("Alien", 50, 10, 800, 10000L);
         e.subirDegats(30);
         e.reinitialiser();
         assertEquals(50, e.getPointsDeVie());
@@ -78,7 +78,7 @@ class CombatUnitTest {
 
     @Test
     void alienRatioPv() {
-        Extraterrestre e = new Extraterrestre("Alien", 100, 10, 800);
+        Extraterrestre e = new Extraterrestre("Alien", 100, 10, 800, 10000L);
         e.subirDegats(25);
         assertEquals(0.75, e.getRatioPv(), 0.01);
     }

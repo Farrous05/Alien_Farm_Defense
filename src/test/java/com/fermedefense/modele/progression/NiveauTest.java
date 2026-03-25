@@ -61,7 +61,7 @@ class NiveauTest {
     @Test
     void creerVagueRetourneBonNombreAliens() {
         Niveau niv = new Niveau(3);
-        List<Extraterrestre> vague = niv.creerVague(0);
+        List<Extraterrestre> vague = niv.creerVagueDynamique(0, 2);
         assertEquals(2, vague.size()); // aliensParVague = 2
         for (Extraterrestre alien : vague) {
             assertEquals(40, alien.getPointsDeVieMax());
@@ -73,8 +73,8 @@ class NiveauTest {
     @Test
     void creerVagueDifferentsIndex() {
         Niveau niv = new Niveau(2);
-        List<Extraterrestre> v0 = niv.creerVague(0);
-        List<Extraterrestre> v1 = niv.creerVague(1);
+        List<Extraterrestre> v0 = niv.creerVagueDynamique(0, 2);
+        List<Extraterrestre> v1 = niv.creerVagueDynamique(1, 2);
         // Mêmes stats mais noms différents
         assertNotEquals(v0.get(0).getNom(), v1.get(0).getNom());
         assertEquals(v0.get(0).getPointsDeVieMax(), v1.get(0).getPointsDeVieMax());
