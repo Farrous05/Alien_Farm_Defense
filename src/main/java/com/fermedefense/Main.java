@@ -8,6 +8,7 @@ import com.fermedefense.modele.jeu.Partie;
 import com.fermedefense.modele.joueur.Joueur;
 import com.fermedefense.modele.marche.Marche;
 import com.fermedefense.utilitaire.Constantes;
+import com.fermedefense.vue.VueMenuPrincipal;
 import com.fermedefense.vue.VuePrincipale;
 
 /**
@@ -15,6 +16,12 @@ import com.fermedefense.vue.VuePrincipale;
  */
 public class Main {
     public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new VueMenuPrincipal().setVisible(true);
+        });
+    }
+
+    public static void lancerJeu() {
         SwingUtilities.invokeLater(() -> {
             // Modèle
             Carte carte = new Carte(Constantes.LARGEUR_CARTE, Constantes.HAUTEUR_CARTE);
