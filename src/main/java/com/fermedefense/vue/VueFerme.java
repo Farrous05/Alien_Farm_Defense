@@ -9,11 +9,31 @@ import com.fermedefense.modele.ferme.EtatVache;
 import com.fermedefense.modele.ferme.Ferme;
 import com.fermedefense.modele.ferme.Vache;
 
+import java.awt.Image;
+import java.io.InputStream;
+import javax.imageio.ImageIO;
+
 /**
  * Dessine le contenu de la zone Ferme :
  * fond vert, vaches avec barre de croissance/production.
  */
 public class VueFerme {
+
+    private static Image imgBebe;
+    private static Image imgAdulte;
+    private static Image imgProductive;
+    private static Image imgBgFerme;
+
+    static {
+        try {
+            imgBebe = ImageIO.read(VueFerme.class.getResource("/images/vache_bebe.png"));
+            imgAdulte = ImageIO.read(VueFerme.class.getResource("/images/vache_adulte.png"));
+            imgProductive = ImageIO.read(VueFerme.class.getResource("/images/vache_productive.png"));
+            imgBgFerme = ImageIO.read(VueFerme.class.getResource("/images/bg_ferme.png"));
+        } catch (Exception e) {
+            System.err.println("Erreur chargement images vaches : " + e.getMessage());
+        }
+    }
 
     private final Ferme ferme;
 
@@ -26,8 +46,12 @@ public class VueFerme {
      */
     public void dessiner(Graphics2D g2, int zx, int zy, int zw, int zh) {
         // Fond
-        g2.setColor(new Color(60, 140, 60));
-        g2.fillRect(zx, zy, zw, zh);
+        if (imgBgFerme != null) {
+            g2.drawImage(imgBgFerme, zx, zy, zw, zh, null);
+        } else {
+            g2.setColor(new Color(60, 140, 60));
+            g2.fillRect(zx, zy, zw, zh);
+        }
 
         // Bordure
         g2.setColor(new Color(40, 100, 40));
@@ -59,16 +83,27 @@ public class VueFerme {
     private void dessinerVache(Graphics2D g2, Vache v, int x, int y, int w) {
         EtatVache etat = v.getEtat();
 
-        // Icône
-        Color couleur = switch (etat) {
-            case BEBE       -> new Color(180, 220, 180);
-            case ADULTE     -> new Color(230, 230, 150);
-            case PRODUCTIVE -> new Color(255, 255, 255);
+        Image cowImage = switch (etat) {
+            case BEBE       -> imgBebe;
+            case ADULTE     -> imgAdulte;
+            case PRODUCTIVE -> imgProductive;
         };
-        g2.setColor(couleur);
-        g2.fillRoundRect(x, y, 30, 25, 8, 8);
-        g2.setColor(Color.BLACK);
-        g2.drawRoundRect(x, y, 30, 25, 8, 8);
+
+        if (cowImage != null) {
+            // Draw image slightly higher to fit beautifully
+            g2.drawImage(cowImage, x, y - 10, 45, 45, null);
+        } else {
+            // Fallback icône
+            Color couleur = switch (etat) {
+                case BEBE       -> new Color(180, 220, 180);
+                case ADULTE     -> new Color(230, 230, 150);
+                case PRODUCTIVE -> new Color(255, 255, 255);
+            };
+            g2.setColor(couleur);
+            g2.fillRoundRect(x, y, 30, 25, 8, 8);
+            g2.setColor(Color.BLACK);
+            g2.drawRoundRect(x, y, 30, 25, 8, 8);
+        }
 
         // Nom + état
         g2.setFont(new Font("SansSerif", Font.PLAIN, 11));

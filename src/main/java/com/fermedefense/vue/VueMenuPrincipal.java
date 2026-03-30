@@ -7,24 +7,55 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-
+import java.awt.Image;
+import java.awt.geom.AffineTransform;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.Timer;
-import java.awt.geom.AffineTransform;
+import javax.swing.border.EmptyBorder;
 
 import com.fermedefense.Main;
 import com.fermedefense.utilitaire.Constantes;
 
 public class VueMenuPrincipal extends JFrame {
+
+    private static Image imgBebe;
+    private static Image imgAdulte;
+    private static Image imgProductive;
+    private static Font customFontMain;
+    private static Font customFontSub;
+    private static Font customFontBtn;
+
+    static {
+        try {
+            imgBebe = ImageIO.read(VueMenuPrincipal.class.getResource("/images/vache_bebe.png"));
+            imgAdulte = ImageIO.read(VueMenuPrincipal.class.getResource("/images/vache_adulte.png"));
+            imgProductive = ImageIO.read(VueMenuPrincipal.class.getResource("/images/vache_productive.png"));
+            
+            InputStream is = VueMenuPrincipal.class.getResourceAsStream("/fonts/PressStart2P.ttf");
+            if (is != null) {
+                Font baseFont = Font.createFont(Font.TRUETYPE_FONT, is);
+                customFontMain = baseFont.deriveFont(Font.PLAIN, 36f);
+                customFontSub = baseFont.deriveFont(Font.PLAIN, 12f);
+                customFontBtn = baseFont.deriveFont(Font.PLAIN, 18f);
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur chargement ressources menu: " + e.getMessage());
+        }
+        
+        // Fallback fonts
+        if (customFontMain == null) customFontMain = new Font("SansSerif", Font.BOLD, 48);
+        if (customFontSub == null) customFontSub = new Font("SansSerif", Font.ITALIC, 18);
+        if (customFontBtn == null) customFontBtn = new Font("SansSerif", Font.BOLD, 24);
+    }
 
     private class VacheVolante {
         double x, y;
@@ -32,6 +63,7 @@ public class VueMenuPrincipal extends JFrame {
         double rotation;
         double dRotation;
         int taille;
+        Image sprite;
 
         VacheVolante() {
             x = Math.random() * 800;
@@ -44,7 +76,13 @@ public class VueMenuPrincipal extends JFrame {
             
             rotation = Math.random() * Math.PI * 2;
             dRotation = (Math.random() - 0.5) * 0.05;
-            taille = 30 + (int)(Math.random() * 20);
+            taille = 30 + (int)(Math.random() * 30);
+            
+            // Randomly pick a cow sprite
+            int randSprite = (int)(Math.random() * 3);
+            if(randSprite == 0) sprite = imgBebe;
+            else if(randSprite == 1) sprite = imgAdulte;
+            else sprite = imgProductive;
         }
 
         void update() {
@@ -62,28 +100,30 @@ public class VueMenuPrincipal extends JFrame {
             g2.translate(x, y);
             g2.rotate(rotation);
             
-            // Ombre portée pour l'effet volant
-            g2.setColor(new Color(0, 0, 0, 50));
-            g2.fillRoundRect(-taille/2 + 5, -taille/2 + 5, taille, (int)(taille*0.75), 8, 8);
-
-            // Corps vache
-            g2.setColor(Color.WHITE);
-            g2.fillRoundRect(-taille/2, -taille/2, taille, (int)(taille*0.75), 8, 8);
-            
-            // Taches noires "simplistes"
-            g2.setColor(Color.BLACK);
-            g2.fillOval(-taille/4, -taille/4, taille/3, taille/4);
-            g2.fillOval(taille/8, 0, taille/4, taille/5);
-            
-            // Bordure
-            g2.drawRoundRect(-taille/2, -taille/2, taille, (int)(taille*0.75), 8, 8);
+            if (sprite != null) {
+                // Ombre
+                g2.translate(4, 4);
+                g2.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f));
+                g2.drawImage(sprite, -taille/2, -taille/2, taille, taille, null);
+                g2.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
+                g2.translate(-4, -4);
+                
+                // Vache
+                g2.drawImage(sprite, -taille/2, -taille/2, taille, taille, null);
+            } else {
+                // Fallback rendering
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(-taille/2, -taille/2, taille, (int)(taille*0.75), 8, 8);
+                g2.setColor(Color.BLACK);
+                g2.drawRoundRect(-taille/2, -taille/2, taille, (int)(taille*0.75), 8, 8);
+            }
             
             g2.setTransform(old);
         }
     }
 
     private List<VacheVolante> vaches;
-    private Timer timer;
+    private final Timer timer;
 
     public VueMenuPrincipal() {
         super(Constantes.TITRE_FENETRE);
@@ -95,7 +135,6 @@ public class VueMenuPrincipal extends JFrame {
             vaches.add(new VacheVolante());
         }
         
-        // Panneau principal avec un fond sombre
         JPanel panneauMain = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -103,11 +142,9 @@ public class VueMenuPrincipal extends JFrame {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 
-                // Dégradé ou fond simple sombre
                 g2.setColor(new Color(20, 30, 40));
                 g2.fillRect(0, 0, getWidth(), getHeight());
                 
-                // Petits détails décoratifs : étoiles
                 g2.setColor(new Color(255, 255, 255, 50));
                 java.util.Random rand = new java.util.Random(12345);
                 for(int i = 0; i < 150; i++) {
@@ -117,14 +154,12 @@ public class VueMenuPrincipal extends JFrame {
                     g2.fillOval(px, py, size, size);
                 }
                 
-                // Dessin des vaches
                 for (VacheVolante v : vaches) {
                     v.draw(g2);
                 }
             }
         };
         
-        // Timer d'animation (approx 60 FPS)
         timer = new Timer(16, e -> {
             for (VacheVolante v : vaches) {
                 v.update();
@@ -134,26 +169,23 @@ public class VueMenuPrincipal extends JFrame {
         timer.start();
 
         panneauMain.setLayout(new BoxLayout(panneauMain, BoxLayout.Y_AXIS));
-        panneauMain.setPreferredSize(new Dimension(800, 600)); // Taille fixe pour le menu
+        panneauMain.setPreferredSize(new Dimension(800, 600)); 
         panneauMain.setBorder(new EmptyBorder(100, 50, 50, 50));
         
-        // Titre
         JLabel titre = new JLabel("ALIEN FARM DEFENSE");
-        titre.setFont(new Font("SansSerif", Font.BOLD, 48));
-        titre.setForeground(new Color(80, 255, 80)); // Vert alien
+        titre.setFont(customFontMain);
+        titre.setForeground(new Color(80, 255, 80)); 
         titre.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        // Sous-titre
-        JLabel sousTitre = new JLabel("Protégez vos vaches. Détruisez les aliens.");
-        sousTitre.setFont(new Font("SansSerif", Font.ITALIC, 18));
+        JLabel sousTitre = new JLabel("Protegez vos vaches. Detruisez les aliens.");
+        sousTitre.setFont(customFontSub);
         sousTitre.setForeground(Color.LIGHT_GRAY);
         sousTitre.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        // Boutons
         JButton btnNouvellePartie = creerBouton("Nouvelle Partie");
         btnNouvellePartie.addActionListener(e -> {
-            this.dispose(); // Fermer le menu
-            Main.lancerJeu(); // Démarrer le jeu
+            this.dispose(); 
+            Main.lancerJeu(); 
         });
         
         JButton btnQuitter = creerBouton("Quitter");
@@ -161,14 +193,13 @@ public class VueMenuPrincipal extends JFrame {
             System.exit(0);
         });
         
-        // Ajout des composants
         panneauMain.add(Box.createVerticalGlue());
         panneauMain.add(titre);
-        panneauMain.add(Box.createRigidArea(new Dimension(0, 10)));
+        panneauMain.add(Box.createRigidArea(new Dimension(0, 20)));
         panneauMain.add(sousTitre);
         panneauMain.add(Box.createRigidArea(new Dimension(0, 80)));
         panneauMain.add(btnNouvellePartie);
-        panneauMain.add(Box.createRigidArea(new Dimension(0, 20)));
+        panneauMain.add(Box.createRigidArea(new Dimension(0, 15)));
         panneauMain.add(btnQuitter);
         panneauMain.add(Box.createVerticalGlue());
         
@@ -179,17 +210,16 @@ public class VueMenuPrincipal extends JFrame {
     
     private JButton creerBouton(String texte) {
         JButton btn = new JButton(texte);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 24));
+        btn.setFont(customFontBtn);
         btn.setForeground(Color.WHITE);
         btn.setBackground(new Color(50, 60, 80));
         btn.setFocusPainted(false);
         btn.setOpaque(true);
         btn.setBorderPainted(false);
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setMaximumSize(new Dimension(300, 60));
-        btn.setPreferredSize(new Dimension(300, 60));
+        btn.setMaximumSize(new Dimension(350, 60));
+        btn.setPreferredSize(new Dimension(350, 60));
         
-        // Hover effect simple
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {

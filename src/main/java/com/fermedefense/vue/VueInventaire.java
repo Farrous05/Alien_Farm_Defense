@@ -6,9 +6,25 @@ import java.awt.Graphics2D;
 
 import com.fermedefense.modele.joueur.Inventaire;
 import com.fermedefense.modele.joueur.ObjetInventaire;
+import java.awt.Image;
+import javax.imageio.ImageIO;
 
 public class VueInventaire {
     
+    private static Image imgEpee;
+    private static Image imgShotgun;
+    private static Image imgMinigun;
+
+    static {
+        try {
+            imgEpee = ImageIO.read(VueInventaire.class.getResource("/images/spr_epee.png"));
+            imgShotgun = ImageIO.read(VueInventaire.class.getResource("/images/spr_shotgun.png"));
+            imgMinigun = ImageIO.read(VueInventaire.class.getResource("/images/spr_minigun.png"));
+        } catch (Exception e) {
+            System.err.println("Erreur chargement images armes : " + e.getMessage());
+        }
+    }
+
     private final com.fermedefense.modele.joueur.Joueur joueur;
     private final Inventaire inventaire;
     private final int x;
@@ -63,9 +79,19 @@ public class VueInventaire {
                         g2.setFont(new Font("SansSerif", Font.BOLD, 10));
                         g2.drawString("E", cx + 2, cy + 10);
                     }
-                    g2.setColor(Color.WHITE);
-                    g2.setFont(new Font("SansSerif", Font.BOLD, 16));
-                    g2.drawString(obj.getNom().substring(0, 1).toUpperCase(), cx + 14, cy + 25);
+                    
+                    Image spr = null;
+                    if(obj.getNom().toLowerCase().contains("épée") || obj.getNom().toLowerCase().contains("epee")) spr = imgEpee;
+                    else if(obj.getNom().toLowerCase().contains("shotgun")) spr = imgShotgun;
+                    else if(obj.getNom().toLowerCase().contains("minigun")) spr = imgMinigun;
+                    
+                    if (spr != null) {
+                        g2.drawImage(spr, cx + 2, cy + 2, tailleCase - 4, tailleCase - 4, null);
+                    } else {
+                        g2.setColor(Color.WHITE);
+                        g2.setFont(new Font("SansSerif", Font.BOLD, 16));
+                        g2.drawString(obj.getNom().substring(0, 1).toUpperCase(), cx + 14, cy + 25);
+                    }
                 }
             }
         }

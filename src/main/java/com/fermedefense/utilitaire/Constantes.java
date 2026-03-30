@@ -9,7 +9,7 @@ public final class Constantes {
 
     // --- Fenêtre & Carte ---
     public static final int LARGEUR_CARTE = 900;
-    public static final int HAUTEUR_FENETRE = 500;
+    public static final int HAUTEUR_FENETRE = 700;
     public static final String TITRE_FENETRE = "Alien Farm Defense";
     
     public static final int LARGEUR_SIDEBAR = 220;

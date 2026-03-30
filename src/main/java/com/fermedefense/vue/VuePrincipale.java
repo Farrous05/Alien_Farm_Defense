@@ -31,12 +31,30 @@ import com.fermedefense.modele.marche.Marche;
 import com.fermedefense.modele.progression.BarreProgression;
 import com.fermedefense.utilitaire.Constantes;
 
+import javax.imageio.ImageIO;
+import java.awt.Image;
+
 /**
  * Fenêtre principale du jeu.
  * Contient le panneau de jeu (carte + joueur), le HUD,
  * la barre de progression, et les overlays de combat.
  */
 public class VuePrincipale extends JFrame {
+
+    private static Image imgJoueur;
+    private static Font customFont;
+
+    static {
+        try {
+            imgJoueur = ImageIO.read(VuePrincipale.class.getResource("/images/spr_joueur.png"));
+            java.io.InputStream is = VuePrincipale.class.getResourceAsStream("/fonts/PressStart2P.ttf");
+            if (is != null) {
+                customFont = Font.createFont(Font.TRUETYPE_FONT, is);
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur chargement ressources principales : " + e.getMessage());
+        }
+    }
 
     private final Joueur joueur;
     private final Ferme ferme;
@@ -301,11 +319,18 @@ public class VuePrincipale extends JFrame {
                 vueMarche.setSelection(-1);
             }
 
-            g2.setColor(new Color(220, 120, 50));
-            g2.fillRoundRect(jx, jy, jt, jt, 8, 8);
-            g2.setColor(Color.WHITE);
-            g2.setFont(new Font("SansSerif", Font.BOLD, 10));
-            g2.drawString("J", jx + 10, jy + 20);
+            // Dessin du joueur
+            if (imgJoueur != null) {
+                int drawSize = (int)(jt * 1.5);
+                int offset = (drawSize - jt) / 2;
+                g2.drawImage(imgJoueur, jx - offset, jy - offset, drawSize, drawSize, null);
+            } else {
+                g2.setColor(new Color(220, 120, 50));
+                g2.fillRoundRect(jx, jy, jt, jt, 8, 8);
+                g2.setColor(Color.WHITE);
+                g2.setFont(new Font("SansSerif", Font.BOLD, 10));
+                g2.drawString("J", jx + 10, jy + 20);
+            }
 
             // Action progress bar above player
             ActionDuree action = controleurJeu.getActionEnCours();

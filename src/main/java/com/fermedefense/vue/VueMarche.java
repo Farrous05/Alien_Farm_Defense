@@ -8,11 +8,24 @@ import java.util.List;
 import com.fermedefense.modele.marche.ArticleMarche;
 import com.fermedefense.modele.marche.Marche;
 
+import java.awt.Image;
+import javax.imageio.ImageIO;
+
 /**
  * Dessine le contenu de la zone Marché :
  * fond bleu, liste d'articles avec prix.
  */
 public class VueMarche {
+
+    private static Image imgBgMarche;
+
+    static {
+        try {
+            imgBgMarche = ImageIO.read(VueMarche.class.getResource("/images/bg_marche.png"));
+        } catch (Exception e) {
+            System.err.println("Erreur chargement fond marché : " + e.getMessage());
+        }
+    }
 
     private final Marche marche;
     /** Index de l'article actuellement sélectionné (-1 = aucun). */
@@ -27,8 +40,12 @@ public class VueMarche {
      */
     public void dessiner(Graphics2D g2, int zx, int zy, int zw, int zh) {
         // Fond
-        g2.setColor(new Color(50, 70, 130));
-        g2.fillRect(zx, zy, zw, zh);
+        if (imgBgMarche != null) {
+            g2.drawImage(imgBgMarche, zx, zy, zw, zh, null);
+        } else {
+            g2.setColor(new Color(50, 70, 130));
+            g2.fillRect(zx, zy, zw, zh);
+        }
 
         // Bordure
         g2.setColor(new Color(35, 50, 100));
