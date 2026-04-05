@@ -1,142 +1,102 @@
 package com.fermedefense.modele.marche;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.fermedefense.controleur.ControleurMarche;
+import com.fermedefense.modele.ferme.Ferme;
+import com.fermedefense.modele.jeu.Carte;
+import com.fermedefense.modele.joueur.Joueur;
+
 class MarcheTest {
 
     private Marche marche;
-    private JoueurMarche joueur;
-    private FermeMarche ferme;
+    private Joueur joueur;
+    private Ferme ferme;
+    private ControleurMarche controleur;
 
     @BeforeEach
     void setUp() {
         marche = new Marche();
-        joueur = new JoueurMarche(200);
-        ferme = new FermeMarche();
+        joueur = new Joueur(0, 0, 100, 100, 500);
+        ferme = new Ferme();
+        controleur = new ControleurMarche(joueur, ferme, marche, new Carte(800, 600), null);
     }
 
     // ─── Articles du marché ───
 
     @Test
-    void marcheContientDeuxArticles() {
-        assertEquals(2, marche.getArticles().size());
+    void marcheContientCinqArticles() {
+        assertEquals(5, marche.getArticles().size());
     }
 
     @Test
     void premierArticleEstVache() {
         ArticleMarche vache = marche.getArticles().get(0);
-        assertEquals("Vache laitière", vache.getNom());
+        assertEquals("Vache", vache.getNom());
         assertEquals(TypeArticle.VACHE, vache.getType());
         assertEquals(50, vache.getPrix());
     }
 
     @Test
-    void deuxiemeArticleEstArme() {
-        ArticleMarche arme = marche.getArticles().get(1);
-        assertEquals("Rayon laser", arme.getNom());
-        assertEquals(TypeArticle.ARME, arme.getType());
-        assertEquals(120, arme.getPrix());
+    void deuxiemeArticleEstRayonLaser() {
+        ArticleMarche laser = marche.getArticles().get(1);
+        assertEquals("Rayon laser", laser.getNom());
+        assertEquals(TypeArticle.ARME, laser.getType());
+        assertEquals(120, laser.getPrix());
     }
 
     // ─── Achat réussi ───
 
     @Test
     void acheterVacheReussi() {
-        ArticleMarche vache = marche.getArticles().get(0);
-        AchatResult r = marche.acheter(joueur, vache, ferme);
-
-        assertEquals(AchatResult.Type.OK, r.getType());
-        assertEquals(150, r.getMonnaieRestante());
-        assertEquals(1, ferme.getNombreAnimaux());
+        ControleurMarche.ResultatAchat r = controleur.acheter(0);
+        assertEquals(ControleurMarche.ResultatAchat.OK, r);
+        assertEquals(450, joueur.getMonnaie());
     }
 
     @Test
-    void acheterArmeReussi() {
-        ArticleMarche arme = marche.getArticles().get(1);
-        AchatResult r = marche.acheter(joueur, arme, ferme);
-
-        assertEquals(AchatResult.Type.OK, r.getType());
-        assertEquals(80, r.getMonnaieRestante());
-        assertEquals(TypeArticle.ARME, r.getTypeArticle());
-        assertEquals(1, joueur.getArmes().size());
+    void acheterRayonLaserReussi() {
+        ControleurMarche.ResultatAchat r = controleur.acheter(1);
+        assertEquals(ControleurMarche.ResultatAchat.OK, r);
+        assertEquals(380, joueur.getMonnaie());
     }
 
     // ─── Fonds insuffisants ───
 
     @Test
     void acheterSansFonds() {
-        JoueurMarche pauvre = new JoueurMarche(10);
-        ArticleMarche vache = marche.getArticles().get(0);
-        AchatResult r = marche.acheter(pauvre, vache, ferme);
-
-        assertEquals(AchatResult.Type.FONDS_INSUFFISANTS, r.getType());
-        assertEquals(0, ferme.getNombreAnimaux());
+        Joueur pauvre = new Joueur(0, 0, 100, 100, 10);
+        ControleurMarche ctrlPauvre = new ControleurMarche(pauvre, ferme, marche, new Carte(800, 600), null);
+        ControleurMarche.ResultatAchat r = ctrlPauvre.acheter(0);
+        assertEquals(ControleurMarche.ResultatAchat.FONDS_INSUFFISANTS, r);
     }
 
-    // ─── Article null ───
+    // ─── Aucune sélection ───
 
     @Test
-    void acheterArticleNull() {
-        AchatResult r = marche.acheter(joueur, null, ferme);
-        assertEquals(AchatResult.Type.ARTICLE_INTROUVABLE, r.getType());
+    void acheterSansSelection() {
+        ControleurMarche.ResultatAchat r = controleur.acheter(-1);
+        assertEquals(ControleurMarche.ResultatAchat.AUCUNE_SELECTION, r);
     }
 
-    // ─── Achat déjà en cours ───
+    // ─── Message dernier achat ───
 
     @Test
-    void acheterDejaEnCours() {
-        joueur.setAchatEnCours(true);
-        ArticleMarche vache = marche.getArticles().get(0);
-        AchatResult r = marche.acheter(joueur, vache, ferme);
-
-        assertEquals(AchatResult.Type.DEJA_EN_COURS, r.getType());
-        assertEquals(200, joueur.getMonnaie());
+    void dernierMessageNonNull() {
+        controleur.acheter(0);
+        assertNotNull(controleur.getDernierMessage());
     }
 
     // ─── Achats multiples ───
 
     @Test
-    void acheterPlusieursVaches() {
-        ArticleMarche vache = marche.getArticles().get(0);
-        marche.acheter(joueur, vache, ferme);
-        marche.acheter(joueur, vache, ferme);
-        marche.acheter(joueur, vache, ferme);
-
-        assertEquals(3, ferme.getNombreAnimaux());
-        assertEquals(50, joueur.getMonnaie());
-    }
-
-    @Test
-    void acheterJusquaEpuisement() {
-        ArticleMarche vache = marche.getArticles().get(0);
-        marche.acheter(joueur, vache, ferme); // 150 restant
-        marche.acheter(joueur, vache, ferme); // 100 restant
-        marche.acheter(joueur, vache, ferme); // 50 restant
-        marche.acheter(joueur, vache, ferme); // 0 restant
-        AchatResult r = marche.acheter(joueur, vache, ferme); // pas assez
-
-        assertEquals(AchatResult.Type.FONDS_INSUFFISANTS, r.getType());
-        assertEquals(4, ferme.getNombreAnimaux());
-    }
-
-    // ─── AchatResult ───
-
-    @Test
-    void achatResultCout() {
-        ArticleMarche vache = marche.getArticles().get(0);
-        AchatResult r = marche.acheter(joueur, vache, ferme);
-        assertEquals(50, r.getCout());
-    }
-
-    @Test
-    void achatResultMessage() {
-        ArticleMarche vache = marche.getArticles().get(0);
-        AchatResult r = marche.acheter(joueur, vache, ferme);
-        assertNotNull(r.getMessage());
-        assertFalse(r.getMessage().isEmpty());
+    void acheterPlusieursArticles() {
+        controleur.acheter(0); // Vache  50 -> 450
+        controleur.acheter(0); // Vache  50 -> 400
+        controleur.acheter(1); // Rayon laser 120 -> 280
+        assertEquals(280, joueur.getMonnaie());
     }
 }

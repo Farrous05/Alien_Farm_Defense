@@ -71,7 +71,7 @@ public class ControleurCombat {
         termine = false;
         resultat = null;
 
-        // Boss visuel : arrive du côté droit, cible le centre de la ferme
+        // Boss visuel : arrive du bord droit visible (farmW=1000, viewport=1200 → visible)
         double departX = fermeX + fermeW + 120;
         double cibleX = fermeX + fermeW / 2.0 - 20;
         double cibleY = fermeY + fermeH / 2.0;

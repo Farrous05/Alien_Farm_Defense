@@ -13,8 +13,7 @@ class PartieTest {
 
     @BeforeEach
     void setUp() {
-        // 800x600 carte, 120s niveau, 100 monnaie de départ
-        partie = new Partie(800, 600, 120_000, 100);
+        partie = new Partie(800, 600, 120_000);
     }
 
     // ─── État initial ───
@@ -27,11 +26,6 @@ class PartieTest {
     @Test
     void niveauInitialEst1() {
         assertEquals(1, partie.getNiveau());
-    }
-
-    @Test
-    void monnaieInitiale() {
-        assertEquals(100, partie.getMonnaie());
     }
 
     @Test
@@ -176,26 +170,6 @@ class PartieTest {
         partie.demarrer();
         partie.mettreAJour(35_000);
         assertFalse(partie.doitDeclencherAttaque(1000));
-    }
-
-    // ─── Monnaie ───
-
-    @Test
-    void ajouterMonnaie() {
-        partie.ajouterMonnaie(50);
-        assertEquals(150, partie.getMonnaie());
-    }
-
-    @Test
-    void depenserMonnaie() {
-        assertTrue(partie.depenser(40));
-        assertEquals(60, partie.getMonnaie());
-    }
-
-    @Test
-    void depenserTropMonnaie() {
-        assertFalse(partie.depenser(200));
-        assertEquals(100, partie.getMonnaie());
     }
 
     // ─── Pause ───

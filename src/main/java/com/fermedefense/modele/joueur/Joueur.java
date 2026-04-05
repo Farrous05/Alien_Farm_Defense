@@ -1,10 +1,13 @@
 package com.fermedefense.modele.joueur;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * Représente le fermier contrôlé par le joueur.
  * Le joueur a une position (x, y) et peut se déplacer
- * dans une direction donnée.
- * 
+ * dans une ou plusieurs directions simultanément (mouvement diagonal).
+ *
  * Classe modèle pure : pas de thread, pas de dépendance graphique.
  * La boucle de mise à jour est gérée à l'extérieur.
  */
@@ -13,9 +16,8 @@ public class Joueur {
     private double x;
     private double y;
     private double vitesse; // pixels par seconde
-    private Action directionCourante;
-    private boolean enMouvement;
-    private static final int TAILLE = 30;
+    private final Set<Action> directionsActives = EnumSet.noneOf(Action.class);
+    private static final int TAILLE = 45;
 
     // --- Points de vie ---
     private int pointsDeVie;
@@ -40,8 +42,6 @@ public class Joueur {
         this.x = x;
         this.y = y;
         this.vitesse = vitesse;
-        this.directionCourante = null;
-        this.enMouvement = false;
         this.pointsDeVieMax = pointsDeVieMax;
         this.pointsDeVie = pointsDeVieMax;
         this.monnaie = monnaieInit;
@@ -50,45 +50,38 @@ public class Joueur {
 
     /**
      * Met à jour la position du joueur selon le temps écoulé.
-     * Appelé à chaque tick par la boucle de jeu externe.
+     * Supporte le mouvement diagonal : si deux directions orthogonales sont
+     * actives simultanément, le vecteur est normalisé pour conserver la vitesse.
      *
      * @param deltaMs temps écoulé depuis le dernier appel en millisecondes
      */
     public void mettreAJour(long deltaMs) {
-        if (enMouvement && directionCourante != null) {
-            double deplacement = vitesse * deltaMs / 1000.0;
-            deplacer(directionCourante, deplacement);
-        }
-    }
-
-    /**
-     * Déplace le joueur dans la direction donnée.
-     */
-    private void deplacer(Action direction, double deplacement) {
-        switch (direction) {
-            case HAUT:   y -= deplacement; break;
-            case BAS:    y += deplacement; break;
-            case GAUCHE: x -= deplacement; break;
-            case DROITE: x += deplacement; break;
-        }
+        if (directionsActives.isEmpty()) return;
+        double dx = 0, dy = 0;
+        if (directionsActives.contains(Action.HAUT))   dy -= 1;
+        if (directionsActives.contains(Action.BAS))    dy += 1;
+        if (directionsActives.contains(Action.GAUCHE)) dx -= 1;
+        if (directionsActives.contains(Action.DROITE)) dx += 1;
+        if (dx == 0 && dy == 0) return;
+        // Normalize diagonal so speed stays constant
+        double len = Math.sqrt(dx * dx + dy * dy);
+        double deplacement = vitesse * deltaMs / 1000.0;
+        x += (dx / len) * deplacement;
+        y += (dy / len) * deplacement;
     }
 
     /**
      * Appelé quand une touche directionnelle est pressée.
      */
     public void appuyerDirection(Action direction) {
-        this.directionCourante = direction;
-        this.enMouvement = true;
+        directionsActives.add(direction);
     }
 
     /**
-     * Appelé quand la touche directionnelle est relâchée.
+     * Appelé quand une touche directionnelle est relâchée.
      */
     public void relacherDirection(Action direction) {
-        if (this.directionCourante == direction) {
-            this.enMouvement = false;
-            this.directionCourante = null;
-        }
+        directionsActives.remove(direction);
     }
 
     // --- Getters ---
@@ -114,11 +107,13 @@ public class Joueur {
     }
 
     public boolean isEnMouvement() {
-        return enMouvement;
+        return !directionsActives.isEmpty();
     }
 
+    /** Returns the last-pressed direction, or null if no key is held. */
     public Action getDirectionCourante() {
-        return directionCourante;
+        if (directionsActives.isEmpty()) return null;
+        return directionsActives.iterator().next();
     }
 
     // --- Points de vie ---

@@ -4,6 +4,7 @@ import com.fermedefense.modele.combat.Arme;
 import com.fermedefense.modele.ferme.Ferme;
 import com.fermedefense.modele.ferme.Vache;
 import com.fermedefense.modele.jeu.Carte;
+import com.fermedefense.modele.joueur.ActionDuree;
 import com.fermedefense.modele.joueur.Joueur;
 import com.fermedefense.modele.marche.ArticleMarche;
 import com.fermedefense.modele.marche.Marche;
@@ -17,7 +18,7 @@ import com.fermedefense.modele.marche.TypeArticle;
 public class ControleurMarche {
 
     /** Résultat d'un achat, contient un message à afficher. */
-    public enum ResultatAchat { OK, FONDS_INSUFFISANTS, INVENTAIRE_PLEIN, AUCUNE_SELECTION }
+    public enum ResultatAchat { OK, FONDS_INSUFFISANTS, INVENTAIRE_PLEIN, AUCUNE_SELECTION, ARTICLE_VERROUILLE }
 
     private final Joueur joueur;
     private final Ferme ferme;
@@ -53,6 +54,13 @@ public class ControleurMarche {
 
         ArticleMarche article = marche.getArticles().get(indexArticle);
 
+        int niveauActuel = (controleurJeu != null && controleurJeu.getPartie() != null)
+                ? controleurJeu.getPartie().getNiveau() : 1;
+        if (!article.isDebloque(niveauActuel)) {
+            dernierMessage = "Niveau " + article.getNiveauRequis() + " requis !";
+            return ResultatAchat.ARTICLE_VERROUILLE;
+        }
+
         if (joueur.getMonnaie() < article.getPrix()) {
             dernierMessage = "Fonds insuffisants !";
             return ResultatAchat.FONDS_INSUFFISANTS;
@@ -64,6 +72,9 @@ public class ControleurMarche {
         }
 
         joueur.depenser(article.getPrix());
+        if (controleurJeu != null) {
+            controleurJeu.setActionEnCours(new ActionDuree(ActionDuree.TypeAction.ACHAT, 800));
+        }
 
         if (article.getType() == TypeArticle.VACHE) {
             joueur.getInventaire().ajouterObjet(new Vache(
@@ -73,6 +84,7 @@ public class ControleurMarche {
             Arme a = Arme.EPEE;
             if (article.getNom().equals("Shotgun")) a = Arme.SHOTGUN;
             if (article.getNom().equals("Minigun")) a = Arme.MINIGUN;
+            if (article.getNom().equals("Rayon laser")) a = RAYON_LASER;
             joueur.getInventaire().ajouterObjet(a);
             dernierMessage = "Arme achetée : " + article.getNom();
         } else if (article.getType() == TypeArticle.POTION) {
@@ -84,6 +96,18 @@ public class ControleurMarche {
         }
 
         return ResultatAchat.OK;
+    }
+
+    /**
+     * Surcharge pratique pour acheter directement un ArticleMarche.
+     */
+    public ResultatAchat acheter(com.fermedefense.modele.marche.ArticleMarche article) {
+        if (article == null) {
+            dernierMessage = "Sélectionnez un article";
+            return ResultatAchat.AUCUNE_SELECTION;
+        }
+        int idx = marche.getArticles().indexOf(article);
+        return acheter(idx);
     }
 
     public String getDernierMessage() {

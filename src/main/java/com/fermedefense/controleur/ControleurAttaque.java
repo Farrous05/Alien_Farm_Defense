@@ -47,6 +47,8 @@ public class ControleurAttaque {
     private PhaseAttaque phase;
     private int vaguesTerminees;
     private Vache derniereVacheEnlevee;
+    /** Total de vaches enlevées depuis le début du niveau (pour le score). */
+    private int totalVachesEnlevees;
 
     /** Aliens visuels affichés sur la carte. */
     private List<AlienVisuel> aliensVisuels;
@@ -104,13 +106,23 @@ public class ControleurAttaque {
         attaqueCourante = attaqueSansDefense ? null : new Attaque(aliens);
         derniereVacheEnlevee = null;
 
-        // Créer les aliens visuels : départ à droite, cible dans la ferme
+        // Créer les aliens visuels : chaque alien cible la position d'une vache réelle
         aliensVisuels = new ArrayList<>();
-        int departX = fermeX + fermeW + 100; // hors écran à droite
+        int departX = fermeX + fermeW + 100;
+        java.util.List<Vache> vaches = ferme.getVaches();
         for (int i = 0; i < aliens.size(); i++) {
-            double cibleX = fermeX + 40 + (i % 3) * 60;
-            double cibleY = fermeY + 60 + (i / 3) * 50 + (i % 2) * 20;
-            double departY = cibleY + (Math.random() - 0.5) * 40;
+            double cibleX, cibleY;
+            if (!vaches.isEmpty()) {
+                // Chaque alien cible une vache différente (modulo si moins de vaches)
+                Vache cible = vaches.get(i % vaches.size());
+                cibleX = cible.getX() + 20;
+                cibleY = cible.getY() + 20;
+            } else {
+                // Fallback : positions fixes dans la ferme
+                cibleX = fermeX + 80 + (i % 3) * 120;
+                cibleY = fermeY + 100 + (i / 3) * 100;
+            }
+            double departY = cibleY + (Math.random() - 0.5) * 60;
             aliensVisuels.add(new AlienVisuel(departX + i * 30, departY,
                     cibleX, cibleY, VITESSE_ALIEN_VISUEL, aliens.get(i).getType()));
         }
@@ -165,6 +177,7 @@ public class ControleurAttaque {
                 if (abductions > 0) {
                     for (int i = 1; i <= abductions; i++) {
                         ferme.enleverDerniereVache();
+                        totalVachesEnlevees++;
                         int idxFui = attaqueCourante.getIndexAlienCourant() - i;
                         if (idxFui >= 0 && idxFui < aliensVisuels.size()) {
                             aliensVisuels.get(idxFui).setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
@@ -186,6 +199,7 @@ public class ControleurAttaque {
                         }
                     } else {
                         derniereVacheEnlevee = ferme.enleverDerniereVache();
+                        if (derniereVacheEnlevee != null) totalVachesEnlevees++;
                         for (AlienVisuel av : aliensVisuels) {
                             if (av.getEtat() == AlienVisuel.EtatVisuel.COMBAT) {
                                 av.setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
@@ -206,6 +220,7 @@ public class ControleurAttaque {
                 if (tousSortis) {
                     if (attaqueSansDefense) {
                         derniereVacheEnlevee = ferme.enleverDerniereVache();
+                        if (derniereVacheEnlevee != null) totalVachesEnlevees++;
                         messageFlash = "Une vache a été enlevée !";
                     }
                     phase = PhaseAttaque.INACTIF;
@@ -246,4 +261,5 @@ public class ControleurAttaque {
     public Vache getDerniereVacheEnlevee() { return derniereVacheEnlevee; }
     public PhaseAttaque getPhase() { return phase; }
     public List<AlienVisuel> getAliensVisuels() { return aliensVisuels; }
+    public int getTotalVachesEnlevees() { return totalVachesEnlevees; }
 }

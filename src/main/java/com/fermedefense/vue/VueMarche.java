@@ -1,113 +1,74 @@
 package com.fermedefense.vue;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics2D;
 import java.util.List;
 
-import com.fermedefense.modele.marche.ArticleMarche;
 import com.fermedefense.modele.marche.Marche;
-
-import java.awt.Image;
-import javax.imageio.ImageIO;
+import com.fermedefense.modele.marche.TypeArticle;
+import com.fermedefense.utilitaire.Constantes;
 
 /**
- * Dessine le contenu de la zone Marché :
- * fond bleu, liste d'articles avec prix.
+ * Crée et expose les vendeurs physiques placés dans la zone Marché du monde.
+ *
+ * Chaque vendeur est un objet à une position monde fixe.
+ * Le rendu est délégué à {@link VueMarchePopup}.
+ *
+ * Positions des vendeurs (coordonnées monde, zone marché x = LARGEUR_CARTE/2) :
+ *   Armes    → (1350, 300)
+ *   Vaches   → (1700, 550)
+ *   Potions  → (2000, 300)
+ *   Bombes   → (1550, 850)
  */
 public class VueMarche {
 
-    private static Image imgBgMarche;
-
-    static {
-        try {
-            imgBgMarche = ImageIO.read(VueMarche.class.getResource("/images/bg_marche.png"));
-        } catch (Exception e) {
-            System.err.println("Erreur chargement fond marché : " + e.getMessage());
-        }
-    }
-
-    private final Marche marche;
-    /** Index de l'article actuellement sélectionné (-1 = aucun). */
-    private int selection = -1;
+    private final List<VendeurMarche> vendeurs;
 
     public VueMarche(Marche marche) {
-        this.marche = marche;
+        int split = Constantes.LARGEUR_CARTE / 2; // 1200
+
+        vendeurs = List.of(
+            new VendeurMarche(
+                split + 120, 260,
+                "Forge — Armes",
+                "/images/market/sword_normal.png",
+                marche,
+                TypeArticle.ARME
+            ),
+            new VendeurMarche(
+                split + 400, 460,
+                "Élevage — Vaches",
+                "/images/vache_bebe.png",
+                marche,
+                TypeArticle.VACHE
+            ),
+            new VendeurMarche(
+                split + 680, 260,
+                "Apothicaire",
+                "/images/market/potion_red.png",
+                marche,
+                TypeArticle.POTION
+            ),
+            new VendeurMarche(
+                split + 280, 700,
+                "Armurerie — Bombes",
+                "/images/market/chest.png",
+                marche,
+                TypeArticle.BOMBE
+            )
+        );
+    }
+
+    public List<VendeurMarche> getVendeurs() {
+        return vendeurs;
     }
 
     /**
-     * Dessine le marché dans la zone (zx, zy, zw, zh).
+     * Retourne le vendeur le plus proche du joueur, ou null si aucun n'est
+     * dans le rayon d'interaction.
      */
-    public void dessiner(Graphics2D g2, int zx, int zy, int zw, int zh) {
-        // Fond
-        if (imgBgMarche != null) {
-            g2.drawImage(imgBgMarche, zx, zy, zw, zh, null);
-        } else {
-            g2.setColor(new Color(50, 70, 130));
-            g2.fillRect(zx, zy, zw, zh);
+    public VendeurMarche getVendeurActif(double jx, double jy) {
+        for (VendeurMarche v : vendeurs) {
+            if (v.estProche(jx, jy)) return v;
         }
-
-        // Bordure
-        g2.setColor(new Color(35, 50, 100));
-        g2.drawRect(zx, zy, zw - 1, zh - 1);
-
-        // Label
-        g2.setColor(Color.WHITE);
-        g2.setFont(new Font("SansSerif", Font.BOLD, 16));
-        g2.drawString("MARCHÉ", zx + 10, zy + 24);
-
-        // Articles
-        List<ArticleMarche> articles = marche.getArticles();
-        int startY = zy + 45;
-        int itemH = 50;
-
-        for (int i = 0; i < articles.size(); i++) {
-            ArticleMarche a = articles.get(i);
-            int iy = startY + i * itemH;
-            boolean selected = (i == selection);
-
-            // Fond item
-            g2.setColor(selected ? new Color(80, 110, 180) : new Color(60, 80, 145));
-            g2.fillRoundRect(zx + 10, iy, zw - 20, itemH - 5, 8, 8);
-
-            // Nom
-            g2.setColor(Color.WHITE);
-            g2.setFont(new Font("SansSerif", Font.BOLD, 13));
-            g2.drawString(a.getNom(), zx + 20, iy + 20);
-
-            // Type + prix
-            g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
-            g2.setColor(new Color(200, 200, 200));
-            g2.drawString(a.getType() + "  |  Prix: " + a.getPrix(), zx + 20, iy + 36);
-
-            // Prix highlight
-            g2.setColor(new Color(255, 215, 0));
-            g2.setFont(new Font("SansSerif", Font.BOLD, 14));
-            g2.drawString(String.valueOf(a.getPrix()), zx + zw - 55, iy + 25);
-        }
-
-        // Instructions
-        g2.setColor(new Color(180, 180, 180));
-        g2.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        g2.drawString("[1/2] sélectionner  [ENTER] acheter", zx + 10, zy + zh - 12);
-    }
-
-    public int getSelection() { return selection; }
-
-    public void setSelection(int idx) {
-        List<ArticleMarche> articles = marche.getArticles();
-        if (idx >= 0 && idx < articles.size()) {
-            this.selection = idx;
-        }
-    }
-
-    public void selectionSuivante() {
-        int max = marche.getArticles().size();
-        selection = (selection + 1) % max;
-    }
-
-    public void selectionPrecedente() {
-        int max = marche.getArticles().size();
-        selection = (selection - 1 + max) % max;
+        return null;
     }
 }

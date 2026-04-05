@@ -130,13 +130,13 @@ class CarteTest {
     void clampJoueurDepasseXMax() {
         Joueur j = new Joueur(900, 200, 100, 50, 0);
         carte.clampJoueur(j);
-        assertEquals(800 - 30, j.getX(), 0.01); // largeur - taille
+        assertEquals(800 - 45, j.getX(), 0.01); // largeur - taille
     }
 
     @Test
     void clampJoueurDepasseYMax() {
         Joueur j = new Joueur(100, 700, 100, 50, 0);
         carte.clampJoueur(j);
-        assertEquals(600 - 30, j.getY(), 0.01);
+        assertEquals(600 - 45, j.getY(), 0.01);
     }
 }

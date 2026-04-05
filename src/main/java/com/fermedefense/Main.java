@@ -39,8 +39,7 @@ public class Main {
             // Partie (progression)
             Partie partie = new Partie(
                     Constantes.LARGEUR_CARTE, Constantes.HAUTEUR_CARTE,
-                    Constantes.TEMPS_NIVEAU_MS,
-                    Constantes.MONNAIE_INIT
+                    Constantes.TEMPS_NIVEAU_MS
             );
 
             // Vue + lancement

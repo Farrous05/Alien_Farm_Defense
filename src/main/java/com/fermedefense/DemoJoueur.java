@@ -17,13 +17,12 @@ import com.fermedefense.modele.joueur.Joueur;
 
 /**
  * Test simple : un carré se déplace avec les flèches.
- * Un Thread met à jour la position du joueur en boucle.
  */
 public class DemoJoueur extends JPanel implements KeyListener {
 
     private final Joueur joueur;
     private final Carte carte;
-    private volatile boolean actif;
+    private long dernierTick;
 
     public DemoJoueur() {
         setPreferredSize(new Dimension(600, 400));
@@ -31,21 +30,16 @@ public class DemoJoueur extends JPanel implements KeyListener {
 
         carte = new Carte(600, 400);
         joueur = new Joueur(285, 185, 150, 100, 500);
-        actif = true;
+        dernierTick = System.currentTimeMillis();
 
-        // Thread qui met à jour la position du joueur
-        Thread t = new Thread(() -> {
-            long dernier = System.currentTimeMillis();
-            while (actif) {
-                long now = System.currentTimeMillis();
-                joueur.mettreAJour(now - dernier);
-                carte.clampJoueur(joueur);
-                dernier = now;
-                try { Thread.sleep(16); } catch (InterruptedException e) { break; }
-            }
-        }, "Thread-Joueur");
-        t.setDaemon(true);
-        t.start();
+        // Swing Timer drives model updates on the EDT (~60 FPS)
+        new Timer(16, e -> {
+            long now = System.currentTimeMillis();
+            joueur.mettreAJour(now - dernierTick);
+            carte.clampJoueur(joueur);
+            dernierTick = now;
+            repaint();
+        }).start();
 
         setFocusable(true);
         addKeyListener(this);
@@ -99,7 +93,6 @@ public class DemoJoueur extends JPanel implements KeyListener {
             f.setLocationRelativeTo(null);
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-            new Timer(16, e -> demo.repaint()).start();
             f.setVisible(true);
         });
     }

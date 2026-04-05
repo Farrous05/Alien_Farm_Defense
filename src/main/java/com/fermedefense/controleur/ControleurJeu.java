@@ -125,8 +125,13 @@ public class ControleurJeu {
                 // Vague terminée
                 if (controleurAttaque.getResultat() == ResultatCombat.DEFAITE) {
                     partie.terminer(false);
+                } else if (controleurAttaque.getResultat() == ResultatCombat.VICTOIRE) {
+                    // Mettre à jour le score de la vague
+                    com.fermedefense.modele.combat.Attaque att = controleurAttaque.getAttaqueCourante();
+                    int nbAliens = att != null ? att.getAliens().size() : 0;
+                    int degats = att != null ? att.getTotalDegatsInfliges() : 0;
+                    partie.getScoreNiveau().enregistrerVagueGagnee(nbAliens, degats);
                 }
-                // Sinon on continue la barre de progression
             }
             return; // la barre est en pause pendant un combat
         }
@@ -136,6 +141,16 @@ public class ControleurJeu {
             controleurCombat.mettreAJour(delta, joueur);
             if (controleurCombat.isTermine()) {
                 boolean victoire = controleurCombat.getResultat() == ResultatCombat.VICTOIRE;
+                if (victoire) {
+                    com.fermedefense.modele.combat.Attaque attBoss = controleurCombat.getAttaqueBoss();
+                    int degats = attBoss != null ? attBoss.getTotalDegatsInfliges() : 0;
+                    partie.getScoreNiveau().enregistrerBossVaincu(degats);
+                }
+                // Enregistrer les vaches perdues pendant toute la vague
+                int vachesPerdues = controleurAttaque != null ? controleurAttaque.getTotalVachesEnlevees() : 0;
+                for (int i = 0; i < vachesPerdues; i++) {
+                    partie.getScoreNiveau().enregistrerVachePerdue();
+                }
                 partie.terminer(victoire);
             }
             return;

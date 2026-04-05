@@ -13,7 +13,11 @@ public class Partie {
     private EtatJeu etat;
     private final Carte carte;
     private int niveau;
-    private int monnaie;
+
+    /** Score cumulé sur toute la partie (tous niveaux). */
+    private int scoreCumule;
+    /** Score du niveau en cours. */
+    private ScorePartie scoreNiveau;
 
     // Temps en millisecondes
     private long tempsTotal;
@@ -29,17 +33,17 @@ public class Partie {
      * @param largeurCarte largeur de la carte
      * @param hauteurCarte hauteur de la carte
      * @param tempsTotal   durée totale du niveau en millisecondes
-     * @param monnaieInit  monnaie de départ
      */
-    public Partie(int largeurCarte, int hauteurCarte, long tempsTotal, int monnaieInit) {
+    public Partie(int largeurCarte, int hauteurCarte, long tempsTotal) {
         this.carte = new Carte(largeurCarte, hauteurCarte);
         this.etat = EtatJeu.MENU;
         this.niveau = 1;
-        this.monnaie = monnaieInit;
         this.tempsTotal = tempsTotal;
         this.tempsEcoule = 0;
         this.enPause = false;
         this.momentsAttaques = new ArrayList<>();
+        this.scoreCumule = 0;
+        this.scoreNiveau = new ScorePartie(niveau);
     }
 
     /**
@@ -109,25 +113,13 @@ public class Partie {
      * @param nouveauTemps nouveau temps total en ms
      */
     public void niveauSuivant(long nouveauTemps) {
+        scoreCumule += scoreNiveau.calculerScore();
         this.niveau++;
         this.tempsTotal = nouveauTemps;
         this.tempsEcoule = 0;
         this.momentsAttaques.clear();
         this.etat = EtatJeu.MENU;
-    }
-
-    // --- Gestion de la monnaie ---
-
-    public void ajouterMonnaie(int montant) {
-        this.monnaie += montant;
-    }
-
-    public boolean depenser(int montant) {
-        if (montant > monnaie) {
-            return false;
-        }
-        this.monnaie -= montant;
-        return true;
+        this.scoreNiveau = new ScorePartie(niveau);
     }
 
     // --- Pause ---
@@ -148,10 +140,6 @@ public class Partie {
 
     public int getNiveau() {
         return niveau;
-    }
-
-    public int getMonnaie() {
-        return monnaie;
     }
 
     public long getTempsTotal() {
@@ -177,4 +165,7 @@ public class Partie {
     public List<Long> getMomentsAttaques() {
         return momentsAttaques;
     }
+
+    public ScorePartie getScoreNiveau() { return scoreNiveau; }
+    public int getScoreCumule() { return scoreCumule + scoreNiveau.calculerScore(); }
 }

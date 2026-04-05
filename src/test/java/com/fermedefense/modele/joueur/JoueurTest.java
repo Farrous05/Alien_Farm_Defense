@@ -26,7 +26,7 @@ class JoueurTest {
 
     @Test
     void tailleConstante() {
-        assertEquals(30, joueur.getTaille());
+        assertEquals(45, joueur.getTaille());
     }
 
     // ─── Déplacement ───
