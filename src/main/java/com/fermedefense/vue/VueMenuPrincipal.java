@@ -23,6 +23,7 @@ import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
 import com.fermedefense.Main;
+import com.fermedefense.modele.jeu.TableauScores;
 import com.fermedefense.utilitaire.Constantes;
 
 public class VueMenuPrincipal extends JFrame {
@@ -184,21 +185,26 @@ public class VueMenuPrincipal extends JFrame {
         
         JButton btnNouvellePartie = creerBouton("Nouvelle Partie");
         btnNouvellePartie.addActionListener(e -> {
-            this.dispose(); 
-            Main.lancerJeu(); 
+            this.dispose();
+            Main.lancerJeu();
         });
-        
+
+        JButton btnScores = creerBouton("Meilleurs Scores");
+        btnScores.addActionListener(e -> afficherLeaderboard());
+
         JButton btnQuitter = creerBouton("Quitter");
         btnQuitter.addActionListener(e -> {
             System.exit(0);
         });
-        
+
         panneauMain.add(Box.createVerticalGlue());
         panneauMain.add(titre);
         panneauMain.add(Box.createRigidArea(new Dimension(0, 20)));
         panneauMain.add(sousTitre);
-        panneauMain.add(Box.createRigidArea(new Dimension(0, 80)));
+        panneauMain.add(Box.createRigidArea(new Dimension(0, 60)));
         panneauMain.add(btnNouvellePartie);
+        panneauMain.add(Box.createRigidArea(new Dimension(0, 15)));
+        panneauMain.add(btnScores);
         panneauMain.add(Box.createRigidArea(new Dimension(0, 15)));
         panneauMain.add(btnQuitter);
         panneauMain.add(Box.createVerticalGlue());
@@ -208,6 +214,29 @@ public class VueMenuPrincipal extends JFrame {
         setLocationRelativeTo(null);
     }
     
+    private void afficherLeaderboard() {
+        TableauScores tableau = TableauScores.charger();
+        VueTableauScores vue  = new VueTableauScores();
+
+        JPanel panel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(20, 30, 40));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                vue.dessiner(g2, tableau, getWidth() / 2, getHeight() / 2);
+            }
+        };
+        panel.setPreferredSize(new Dimension(400, 340));
+
+        javax.swing.JOptionPane.showMessageDialog(
+                this, panel, "Meilleurs Scores",
+                javax.swing.JOptionPane.PLAIN_MESSAGE);
+    }
+
     private JButton creerBouton(String texte) {
         JButton btn = new JButton(texte);
         btn.setFont(customFontBtn);

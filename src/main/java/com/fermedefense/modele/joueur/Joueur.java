@@ -153,7 +153,20 @@ public class Joueur {
         return pointsDeVieMax;
     }
 
+    /**
+     * Augmente les PV maximum (achat d'upgrade HP).
+     * Soigne aussi le joueur du même montant.
+     */
+    public void addPvMax(int bonus) {
+        if (bonus <= 0) return;
+        this.pointsDeVieMax += bonus;
+        this.pointsDeVie = Math.min(this.pointsDeVie + bonus, this.pointsDeVieMax);
+    }
+
     // --- Monnaie ---
+
+    /** Total cumulatif de monnaie gagnée (pour le succès FERMIER_PROSPERE). */
+    private int totalMonnaieGagnee;
 
     /**
      * Dépense de la monnaie si le joueur en a assez.
@@ -168,17 +181,22 @@ public class Joueur {
     }
 
     /**
-     * Ajoute de la monnaie au joueur.
+     * Ajoute de la monnaie au joueur et accumule le total gagné.
      *
      * @param montant montant à ajouter (ignoré si ≤ 0)
      */
     public void ajouterMonnaie(int montant) {
         if (montant <= 0) return;
         this.monnaie += montant;
+        this.totalMonnaieGagnee += montant;
     }
 
     public int getMonnaie() {
         return monnaie;
+    }
+
+    public int getTotalMonnaieGagnee() {
+        return totalMonnaieGagnee;
     }
 
     public Inventaire getInventaire() {

@@ -60,15 +60,26 @@ public class Attaque {
      * Déclenche une attaque manuelle avec l'arme sélectionnée.
      */
     public void frapperManuel(Arme arme) {
+        frapperManuel(arme, 1.0);
+    }
+
+    /**
+     * Déclenche une attaque manuelle avec multiplicateur de dégâts (upgrade).
+     *
+     * @param arme         arme utilisée
+     * @param dommageMulti multiplicateur appliqué aux dégâts de base
+     */
+    public void frapperManuel(Arme arme, double dommageMulti) {
         if (resultat != ResultatCombat.EN_COURS) return;
         Extraterrestre alien = getAlienCourant();
         if (alien == null || !alien.isVivant()) return;
-        
+
         if (tempsCooldownJoueur <= 0) {
-            alien.subirDegats(arme.getDegats());
-            totalDegatsInfliges += arme.getDegats();
+            int degats = (int) Math.round(arme.getDegats() * dommageMulti);
+            alien.subirDegats(degats);
+            totalDegatsInfliges += degats;
             tempsCooldownJoueur = arme.getCooldownMs();
-            
+
             if (!alien.isVivant()) {
                 indexAlienCourant++;
                 if (indexAlienCourant >= aliens.size()) {

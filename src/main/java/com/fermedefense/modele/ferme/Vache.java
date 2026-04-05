@@ -124,6 +124,22 @@ public class Vache extends Animal implements ObjetInventaire {
         return monnaieAccumulee;
     }
 
+    // ----- Upgrades -----
+
+    /**
+     * Accélère la croissance de la vache par un multiplicateur.
+     * Divise les durées de croissance et le cycle de production par {@code multi}.
+     * Appelé quand l'upgrade "Vitesse vache" est achetée.
+     *
+     * @param multi multiplicateur (ex. 1.2 pour +20 %)
+     */
+    public void appliquerMultiVitesse(double multi) {
+        if (multi <= 0) return;
+        tempsBebeMs   = Math.max(1, (long) (tempsBebeMs   / multi));
+        tempsAdulteMs = Math.max(1, (long) (tempsAdulteMs / multi));
+        cycleProdMs   = Math.max(1, (long) (cycleProdMs   / multi));
+    }
+
     // ----- Accesseurs -----
 
     public EtatVache getEtat() {

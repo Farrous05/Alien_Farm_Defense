@@ -8,5 +8,6 @@ public enum EtatJeu {
     EN_COURS,
     COMBAT_FINAL,
     VICTOIRE,
+    UPGRADE_SHOP,
     DEFAITE
 }

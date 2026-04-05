@@ -3,102 +3,103 @@
 ## Project
 Java 17 + Maven + Swing, MVC architecture.
 Working dir: `/Users/faresshretah/code/projet_pcii/farmdefense`
-Build: `mvn compile` → currently **CLEAN** (0 errors).
-
-Game window: 1120×700 px total. Game area: 900×640 px + sidebar.
-- **Farm zone**: LEFT half (x=0–449), `carte.getZoneFerme()` = `{0, 0, 450, 640}`
-- **Market zone**: RIGHT half (x=450–899), `carte.getZoneMarche()` = `{450, 0, 450, 640}`
-
-View is **top-down (bird's-eye)**, like a 2D RPG (Zelda-style).
+Package root: `com.fermedefense`
+Build: `mvn compile` → **CLEAN** (0 errors, 55 source files).
+Run: `mvn exec:java` or run `Main.java`
 
 ---
 
-## ✅ DONE
+## World & Window Dimensions (Constantes.java)
 
-### World Rendering — `vue/MondeRenderer.java`
-- Full top-down world renderer (NO sky, NO side-view)
-- **Farm zone**: grass tiles (Kenney Tiny Town `tt_0000/0001`) tiled across entire floor, barn roof seen from above (dark red rect with ridge), plowed dirt field, fence borders, tree/bush/plant decorations
-- **Market zone**: stone tiles (`tt_0097/0098/0099`) tiled across entire floor, two market stalls with striped awnings ("Armes & Armures" / "Potions & Bêtes"), crates, barrels, glowing lamp posts
-- **Divider**: thin dark stripe with pulsing blue dots at x=splitX
-- Integrated in `VuePrincipale.PanneauJeu.paintComponent` — replaces the old black fill
-- `VueFerme.dessiner()` and `VueMarche.dessiner()` no longer draw their own backgrounds
+```
+LARGEUR_CARTE    = 2000   (world width, 2 zones × 25 cols × 40px tile)
+HAUTEUR_CARTE    = 1400   (world height, 35 rows × 40px tile)
+LARGEUR_VIEWPORT = 1200
+HAUTEUR_VIEWPORT = 840
+LARGEUR_SIDEBAR  = 240
+LARGEUR_FENETRE  = 1440   (viewport + sidebar)
+HAUTEUR_FENETRE  = 900    (viewport + HUD)
+```
 
-Tile assets in `src/main/resources/images/tiles/`:
-- `tt_0000.png` – grass, `tt_0001.png` – grass sparkle
-- `tt_0002.png` – autumn tree, `tt_0003.png` – green tree
-- `tt_0004.png` – bush, `tt_0005.png` – plant
-- `tt_0013.png` – dirt, `tt_0097/0098/0099.png` – stone floor
-- Source pack: `farmdefense/kenney_tiny-town/Tiles/`
+Farm zone: `x=0..1000`, Market zone: `x=1000..2000`. Split at `LARGEUR_CARTE/2 = 1000`.
+Camera centers on the player, clamped to world bounds.
 
-### Market UI — `vue/VueMarche.java`
-- **No modal** — market stall cards always visible in-world (no `[M]` key)
-- Cards show: icon, name, type, price (gold), level lock badge ("Niv.X") if locked
-- Selection pulsing white border when player is in market zone
-- `dessiner(g2, zx, zy, zw, zh, niveauActuel, joueurDansZone)` — new signature
-- `VueMarcheModal` fully removed from codebase (was ~17 references in `VuePrincipale`)
-- UP/DOWN keys navigate items when in MARCHE zone; `[R]` to buy
+---
+
+## ✅ DONE (this session)
+
+### Camera System — `vue/Camera.java`
+- `centrerSur(Joueur)` centers viewport on player, clamped to world edges
+- `toScreenX/Y(worldCoord)` converts world → screen coordinates
+- Used by all renderers: `MondeRenderer`, `VueFerme`, `VueAliens`, `VueMarchePopup`, `VueIndicateurs`
+
+### Tile-Map World — `vue/TileManager.java` + `vue/MondeRenderer.java`
+- 132 Kenney Tiny Town tiles (16×16px source, rendered at 40×40px)
+- Tiles in `src/main/resources/images/tiles/tt/tile_0000.png` … `tile_0131.png`
+- Maps: `src/main/resources/maps/farm_map.txt` (25×35 grid) and `market_map.txt` (25×35 grid)
+- `MondeRenderer.draw(Graphics2D, Camera)` — camera-aware culling, only draws visible tiles
+- Divider: animated blue-dot line at world x=1000
+
+### Player Sprites — `vue/VuePrincipale.java`
+- Blue Boy Adventure walk sprites: `src/main/resources/images/player/boy_{down,up,left,right}_{1,2}.png`
+- 4 directions × 2 frames, 180ms per frame, `PLAYER_SIZE = 48px`
+- Direction tracked from `joueur.getDirectionCourante()`
+
+### Market Redesign — `vue/VueMarche.java`, `vue/VendeurMarche.java`, `vue/VueMarchePopup.java`
+- **No zone detection** — replaced with proximity detection (`VendeurMarche.RAYON = 90px`)
+- 4 world vendor objects in market zone:
+  - Forge — Armes at (1120, 260)
+  - Élevage — Vaches at (1400, 460)
+  - Apothicaire at (1680, 260)
+  - Armurerie — Bombes at (1280, 700)
+- When player is within 90px: yellow pulsing ring + "[R] acheter" hint drawn by `VueMarchePopup.dessinerVendeur()`
+- `VueMarchePopup.dessinerPopup()`: semi-transparent bottom-center popup, shows items, prices, level locks
+- Keys: UP/DOWN navigate vendor selection; R buys selected item
+- `ControleurMarche.acheter(ArticleMarche)` overload added
+
+### Cow Sprites — `src/main/resources/images/`
+- Source: LPC Farm Animals (OpenGameArt, CC-BY) — sprite sheets `vache_walk.png`, `vache_productive_new.png` (kept as source)
+- **Bébé** (`vache_bebe.png`): warm brown/tan, walking right frame
+- **Adulte** (`vache_adulte.png`): black-and-white Holstein, standard frame
+- **Productive** (`vache_productive.png`): golden/amber, head-down eating pose
+- All same pixel art style, all clearly distinct colors
+
+### Cow Rendering — `vue/VueFerme.java`
+- `COW_SIZE = 96px` (up from 48)
+- State name label drawn above each cow: "Bébé" (tan), "Adulte" (light blue), "Productive" (gold)
+- Progress bar beneath, gold badge shows accumulated money
 
 ### Alien Sprites — `vue/CacheSpritesAliens.java`
-- Loads Kenney UFO PNG ships (space ships = aliens attacking the farm)
-- NORMAL → `shipGreen.png`, RUNNER → `shipYellow.png`, TANK → `shipBeige.png`, BOSS → `shipPink.png`
-- Boss damage states: `getBoss(hpRatio)` — >66% full, 33–66% damage1, <33% damage2
-- Procedural fallback if PNG missing
+- Now uses **manned** variants: `shipGreen_manned.png`, `shipYellow_manned.png`, `shipBeige_manned.png`, `shipPink_manned.png`
+- Source: `farmdefense/kenney_alien-ufo-pack/PNG/` (already on disk, CC0)
+- Copied to `src/main/resources/images/aliens/`
+- Boss damage variants: `shipPink_damage.png` (33–66% HP), `shipPink_damage1.png` (<33%)
+- Procedural fallbacks still exist if PNGs missing
 
-### Alien Animation — `vue/VueAliens.java`
-- Sine-bob floating animation: `bob = (int)(BOB_AMP * sin(now * BOB_FREQ + x * 0.05))`
-- New overload: `dessiner(g2, aliens, boss, hpRatio)` — boss sprite changes with HP
-- Boss halo: red normally, orange-red at <33% HP
-- Old overload `dessiner(g2, aliens, boss)` calls new with hpRatio=1.0
+### Alien Targeting — `controleur/ControleurAttaque.java`
+- Each alien now targets the world position of a real cow: `vaches.get(i % vaches.size())`
+- Aliens spawn at `fermeX + fermeW + 100` (x=1100, visible in the 1200px viewport immediately)
+- Fallback to fixed farm positions if no cows deployed
 
-Alien PNG assets in `src/main/resources/images/aliens/`:
-`shipGreen.png`, `shipYellow.png`, `shipBeige.png`, `shipPink.png`, `shipPink_damage.png`, `shipPink_damage1.png`
+### Combat Overlay — `vue/VueCombat.java` gated in `VuePrincipale`
+- The HP-bar overlay (`VueCombat.dessiner`) **only renders while [A] is held down**
+- `aEstPresse` flag: set true in `keyPressed(A)`, false in `keyReleased(A)`
+- Aliens still approach and fight visually even without the overlay
 
-### Hit Effects — `vue/VueEffetHit.java`
-- Player hits alien → green burst (`laserGreen_burst.png`)
-- Alien hits player → blue burst (`laserBlue_burst.png`)
-- 400ms duration, scales up + fades out
-- Triggered in `VuePrincipale.attaquerAvecArmeEquipee()` and HP-drop detection in paintComponent
-- Assets in `src/main/resources/images/effects/`
-
-### Screen Shake
-- In `VuePrincipale.PanneauJeu.paintComponent`: `g2.translate(sx, sy)` when `now < shakeFinMs`
-- Boss combat hit triggers `shakeFinMs = now + 220ms`
-- Amplitude: ±4px
-
-### Floating Text — `vue/VueEffetTexte.java`
-- `triggerMonnaie(amount, cx, cy)` → "+Xg" in gold, rises 35px, fades 900ms
-- `triggerDegats(amount, cx, cy)` → "-X" in red
-- Triggered in paintComponent when `monnaieCourante > derniereMonnaie`
+### Navigation Arrows — `vue/VueIndicateurs.java`
+- Screen-edge arrows pointing to off-screen cows and vendors
+- Floating down-arrow above on-screen targets (pulses + bobs)
+- Colors: Bébé=green, Adulte=cyan, Productive=gold, Vendors=gold
+- Short label under each edge arrow ("Bébé", "Armes", etc.)
+- Called in `paintComponent` after `vueFerme.dessiner()`
 
 ---
 
-## ❌ TODO (Pending)
+## ❌ TODO (Pending — see PLAN.md for details)
 
-### 1. Local Leaderboard
-- `modele/jeu/TableauScores.java`: top-10 list, saved to `~/.alienfarm/scores.dat` via `ObjectOutputStream`
-- `vue/VueTableauScores.java`: shown after game over and on main menu
-- 3-char initials input (simple text field dialog)
-- Hook into `VuePrincipale.dessinerFinDePartie()` and main menu screen
-
-### 2. Achievement System
-- `modele/jeu/Succes.java` (enum): 5 achievements
-  - `PREMIER_SANG` — first alien killed
-  - `FERMIER_PROSPERE` — earn 500g total
-  - `EXTERMINATEUR` — kill 50 aliens
-  - `INDESTRUCTIBLE` — complete a level at full HP
-  - `RANCHER` — have 3 cows simultaneously
-- Save alongside scores in same file
-- `vue/VueSucces.java` or sidebar badge rendering: 20×20 icon per unlocked achievement, shown in sidebar
-
-### 3. Upgrade Shop (between levels)
-- `vue/VueUpgrades.java`: shown during level transition before level N+1 starts
-- 4 upgrades purchasable with gold:
-  - Max HP +25 → 100g
-  - Weapon DMG +10% → 150g
-  - Cow speed +20% → 80g
-  - Starting gold +50 → 75g
-- Store multipliers in `modele/joueur/Joueur.java`
-- Hook into `ControleurJeu` level-end flow
+1. **Local Leaderboard** — top-10 scores saved to disk, shown on game over + main menu
+2. **Achievement System** — 5 unlockable achievements, shown as sidebar badges
+3. **Upgrade Shop** — between-level shop (HP, damage, cow speed, starting gold)
 
 ---
 
@@ -106,29 +107,46 @@ Alien PNG assets in `src/main/resources/images/aliens/`:
 
 | File | Role |
 |------|------|
-| `vue/VuePrincipale.java` | Main frame + PanneauJeu (paintComponent), ActionKeyListener |
-| `vue/MondeRenderer.java` | Top-down world background |
-| `vue/VueMarche.java` | In-world market stall cards |
-| `vue/VueAliens.java` | Alien/boss drawing + bob animation |
-| `vue/CacheSpritesAliens.java` | PNG sprite loader for aliens |
+| `vue/VuePrincipale.java` | Main frame, PanneauJeu (paintComponent), ActionKeyListener |
+| `vue/Camera.java` | World→screen coordinate translation |
+| `vue/MondeRenderer.java` | Tile-map world rendering (camera-aware) |
+| `vue/TileManager.java` | Tile loader + grid renderer |
+| `vue/VueFerme.java` | Cow rendering with camera, state labels |
+| `vue/VueMarche.java` | World vendor objects list + proximity lookup |
+| `vue/VendeurMarche.java` | Single vendor: position, sprite, item list, selection |
+| `vue/VueMarchePopup.java` | Vendor ring glow + purchase popup |
+| `vue/VueAliens.java` | Alien/boss drawing, bob animation, camera coords |
+| `vue/CacheSpritesAliens.java` | Manned PNG sprite loader for aliens |
+| `vue/VueIndicateurs.java` | Screen-edge navigation arrows |
+| `vue/VueCombat.java` | Combat HP overlay (only shown while A held) |
 | `vue/VueEffetHit.java` | Hit burst effects |
 | `vue/VueEffetTexte.java` | Floating "+Xg" / "-X" text |
-| `vue/VueFerme.java` | Cow rendering (no background anymore) |
-| `vue/VueHUD.java` | Top HUD bar (HP, gold, level) |
+| `vue/VueHUD.java` | Top HUD bar (HP, gold, level, timer) |
 | `vue/VueInventaire.java` | Sidebar inventory grid |
-| `controleur/ControleurJeu.java` | Main game loop, level flow |
-| `controleur/ControleurAttaque.java` | Alien wave combat |
-| `controleur/ControleurCombat.java` | Boss combat |
-| `controleur/ControleurMarche.java` | Buy logic |
-| `modele/jeu/Partie.java` | Game state (niveau, EtatJeu) |
-| `modele/joueur/Joueur.java` | Player stats (HP, gold, inventory) |
-| `modele/marche/Marche.java` | Market item list |
-| `utilitaire/Constantes.java` | LARGEUR_CARTE=900, HAUTEUR_CARTE=640, etc. |
+| `controleur/ControleurJeu.java` | Main game loop, level flow, tick |
+| `controleur/ControleurAttaque.java` | Alien wave logic + visuals |
+| `controleur/ControleurCombat.java` | Boss combat logic + visuals |
+| `controleur/ControleurMarche.java` | Purchase logic |
+| `controleur/ControleurJoueur.java` | Player movement input |
+| `modele/jeu/Partie.java` | Game state machine (EtatJeu) |
+| `modele/jeu/Carte.java` | World dimensions, zone boundaries, player clamping |
+| `modele/joueur/Joueur.java` | Player stats, inventory, weapon |
+| `modele/ferme/Ferme.java` | Cow list, growth, harvest |
+| `modele/ferme/Vache.java` | Cow model (BEBE→ADULTE→PRODUCTIVE states) |
+| `modele/marche/Marche.java` | Item list for all 4 vendor types |
+| `modele/progression/Niveau.java` | Per-level config (duration, waves, alien stats) |
+| `modele/progression/BarreProgression.java` | Time bar, event scheduling |
+| `utilitaire/Constantes.java` | All global constants |
 
 ---
 
-## Kenney Asset Packs (all in `farmdefense/`)
-- `kenney_tiny-town/` — top-down tiles (grass, stone, building parts) ← **use this**
-- `kenney_alien-ufo-pack/PNG/` — spaceship PNGs for aliens
-- `kenney_pixel-platformer/` — side-view (mostly unused now)
-- `kenney_pixel-platformer-farm-expansion/` — side-view farm (mostly unused)
+## Asset Packs (in `farmdefense/`)
+
+| Pack | Used for |
+|------|----------|
+| `kenney_tiny-town/` | 132 top-down tiles → world tilemap |
+| `kenney_alien-ufo-pack/PNG/` | Manned alien spaceships |
+| `kenney_pixel-platformer-farm-expansion/` | Available but no cows found |
+| `kenney_pixel-platformer/` | Available but side-view, mostly unused |
+| LPC Farm Animals (OpenGameArt CC-BY) | Cow sprites (source sheets kept in `images/`) |
+| Blue Boy Adventure (GitHub) | Player walk sprites |

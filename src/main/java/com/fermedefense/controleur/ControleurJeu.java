@@ -10,9 +10,12 @@ import com.fermedefense.modele.combat.ResultatCombat;
 import com.fermedefense.modele.ferme.Ferme;
 import com.fermedefense.modele.jeu.Carte;
 import com.fermedefense.modele.jeu.EtatJeu;
+import com.fermedefense.modele.jeu.GestionnaireSucces;
 import com.fermedefense.modele.jeu.Partie;
+import com.fermedefense.modele.jeu.Succes;
 import com.fermedefense.modele.joueur.ActionDuree;
 import com.fermedefense.modele.joueur.Joueur;
+import com.fermedefense.modele.joueur.Upgrades;
 import com.fermedefense.modele.progression.BarreProgression;
 import com.fermedefense.modele.progression.EvenementTemporel;
 import com.fermedefense.modele.progression.Niveau;
@@ -46,6 +49,12 @@ public class ControleurJeu {
     private Arme arme;
     private ActionDuree actionEnCours;
 
+    // --- Succès & Upgrades ---
+    private GestionnaireSucces gestionnaireSucces;
+    private Upgrades upgrades;
+    /** Compteur cumulatif d'aliens tués sur toute la partie. */
+    private int totalAliensElimines;
+
     public ControleurJeu(Joueur joueur, Ferme ferme, Carte carte, JPanel vue) {
         this.joueur = joueur;
         this.ferme = ferme;
@@ -54,8 +63,19 @@ public class ControleurJeu {
         this.arme = Arme.EPEE;
     }
 
+    /** Injecte le gestionnaire de succès (appelé depuis VuePrincipale). */
+    public void setGestionnaireSucces(GestionnaireSucces g) {
+        this.gestionnaireSucces = g;
+    }
+
+    /** Injecte les upgrades du joueur (appelé depuis VuePrincipale). */
+    public void setUpgrades(Upgrades u) {
+        this.upgrades = u;
+    }
+
     /**
      * Initialise la progression pour un nouveau niveau.
+     * Applique le bonus d'or de départ si des upgrades sont actives.
      */
     public void initialiserNiveau(Partie partie) {
         this.partie = partie;
@@ -68,6 +88,11 @@ public class ControleurJeu {
         int[] zf = carte.getZoneFerme();
         controleurAttaque.setZoneFerme(zf[0], zf[1], zf[2], zf[3]);
         controleurCombat.setZoneFerme(zf[0], zf[1], zf[2], zf[3]);
+
+        // Bonus d'or de départ (upgrade)
+        if (upgrades != null && upgrades.startingGoldBonus > 0) {
+            joueur.ajouterMonnaie(upgrades.startingGoldBonus);
+        }
     }
 
     /** Démarre la boucle de jeu. */
@@ -129,8 +154,15 @@ public class ControleurJeu {
                     // Mettre à jour le score de la vague
                     com.fermedefense.modele.combat.Attaque att = controleurAttaque.getAttaqueCourante();
                     int nbAliens = att != null ? att.getAliens().size() : 0;
-                    int degats = att != null ? att.getTotalDegatsInfliges() : 0;
+                    int degats   = att != null ? att.getTotalDegatsInfliges() : 0;
                     partie.getScoreNiveau().enregistrerVagueGagnee(nbAliens, degats);
+
+                    // Succès : kills cumulatifs
+                    totalAliensElimines += nbAliens;
+                    if (gestionnaireSucces != null) {
+                        gestionnaireSucces.verifier(Succes.PREMIER_SANG,  totalAliensElimines);
+                        gestionnaireSucces.verifier(Succes.EXTERMINATEUR, totalAliensElimines);
+                    }
                 }
             }
             return; // la barre est en pause pendant un combat
@@ -145,6 +177,16 @@ public class ControleurJeu {
                     com.fermedefense.modele.combat.Attaque attBoss = controleurCombat.getAttaqueBoss();
                     int degats = attBoss != null ? attBoss.getTotalDegatsInfliges() : 0;
                     partie.getScoreNiveau().enregistrerBossVaincu(degats);
+
+                    // Succès boss : kills + INDESTRUCTIBLE
+                    totalAliensElimines++;
+                    if (gestionnaireSucces != null) {
+                        gestionnaireSucces.verifier(Succes.PREMIER_SANG,  totalAliensElimines);
+                        gestionnaireSucces.verifier(Succes.EXTERMINATEUR, totalAliensElimines);
+                        if (joueur.getPointsDeVie() == joueur.getPointsDeVieMax()) {
+                            gestionnaireSucces.verifier(Succes.INDESTRUCTIBLE, 1);
+                        }
+                    }
                 }
                 // Enregistrer les vaches perdues pendant toute la vague
                 int vachesPerdues = controleurAttaque != null ? controleurAttaque.getTotalVachesEnlevees() : 0;
@@ -188,4 +230,5 @@ public class ControleurJeu {
     public void setArme(Arme arme) { this.arme = arme; }
     public ActionDuree getActionEnCours() { return actionEnCours; }
     public void setActionEnCours(ActionDuree action) { this.actionEnCours = action; }
+    public int getTotalAliensElimines() { return totalAliensElimines; }
 }

@@ -17,6 +17,8 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import javax.swing.JOptionPane;
+
 import com.fermedefense.controleur.ControleurAttaque;
 import com.fermedefense.controleur.ControleurCombat;
 import com.fermedefense.controleur.ControleurJeu;
@@ -26,11 +28,15 @@ import com.fermedefense.modele.combat.Attaque;
 import com.fermedefense.modele.ferme.Ferme;
 import com.fermedefense.modele.jeu.Carte;
 import com.fermedefense.modele.jeu.EtatJeu;
+import com.fermedefense.modele.jeu.GestionnaireSucces;
 import com.fermedefense.modele.jeu.Partie;
+import com.fermedefense.modele.jeu.Succes;
+import com.fermedefense.modele.jeu.TableauScores;
 import com.fermedefense.modele.jeu.Zone;
 import com.fermedefense.modele.joueur.Action;
 import com.fermedefense.modele.joueur.ActionDuree;
 import com.fermedefense.modele.joueur.Joueur;
+import com.fermedefense.modele.joueur.Upgrades;
 import com.fermedefense.modele.marche.ArticleMarche;
 import com.fermedefense.modele.marche.Marche;
 import com.fermedefense.modele.progression.BarreProgression;
@@ -111,6 +117,20 @@ public class VuePrincipale extends JFrame {
     private long   messageFlashExpire = 0;
     private boolean aEstPresse        = false; // true pendant que A est maintenu
 
+    // ── Leaderboard ───────────────────────────────────────────────────────────
+    private final TableauScores     tableauScores;
+    private final VueTableauScores  vueTableauScores;
+    /** true une fois le score enregistré pour la session courante de fin-de-partie. */
+    private boolean scoreEnregistre = false;
+
+    // ── Succès ────────────────────────────────────────────────────────────────
+    private final GestionnaireSucces gestionnaireSucces;
+    private final VueSucces          vueSucces;
+
+    // ── Upgrade Shop ──────────────────────────────────────────────────────────
+    private final Upgrades    upgrades;
+    private final VueUpgrades vueUpgrades;
+
     // ── Constructeur ──────────────────────────────────────────────────────────
 
     public VuePrincipale(Joueur joueur, Ferme ferme, Carte carte,
@@ -148,6 +168,23 @@ public class VuePrincipale extends JFrame {
         add(vueHUD,      BorderLayout.NORTH);
         add(panneauJeu,  BorderLayout.CENTER);
 
+        // ── Leaderboard, succès & upgrades ───────────────────────────────────
+        this.tableauScores    = TableauScores.charger();
+        this.vueTableauScores = new VueTableauScores();
+        this.gestionnaireSucces = GestionnaireSucces.charger();
+        this.vueSucces        = new VueSucces();
+        this.upgrades         = new Upgrades();
+        this.vueUpgrades      = new VueUpgrades();
+
+        // Callback : notification visuelle + sauvegarde quand un succès se débloque
+        gestionnaireSucces.setOnDeblocage(() -> {
+            Succes s;
+            while ((s = gestionnaireSucces.consommerPendant()) != null) {
+                vueSucces.notifier(s);
+            }
+            gestionnaireSucces.sauvegarder();
+        });
+
         // Contrôleurs
         ControleurJoueur ctrlJoueur = new ControleurJoueur(joueur);
         panneauJeu.addKeyListener(ctrlJoueur);
@@ -155,6 +192,9 @@ public class VuePrincipale extends JFrame {
 
         controleurJeu    = new ControleurJeu(joueur, ferme, carte, panneauJeu);
         controleurMarche = new ControleurMarche(joueur, ferme, marche, carte, controleurJeu);
+
+        controleurJeu.setGestionnaireSucces(gestionnaireSucces);
+        controleurJeu.setUpgrades(upgrades);
 
         ControleurAttaque ctrlAtt = controleurJeu.getControleurAttaque();
         if (ctrlAtt != null) ctrlAtt.setPanneauJeu(panneauJeu);
@@ -279,6 +319,16 @@ public class VuePrincipale extends JFrame {
             // ── Inventaire (sidebar) ─────────────────────────────────────────
             vueInventaire.dessiner(g2);
 
+            // ── Succès (sidebar, sous l'inventaire) ──────────────────────────
+            // Inventaire : y=50, 5 lignes × 40px = 200px → finit à y=250
+            vueSucces.dessiner(g2, gestionnaireSucces,
+                    Constantes.LARGEUR_VIEWPORT + 10, 266,
+                    Constantes.LARGEUR_VIEWPORT);
+
+            // Vérifications succès passives (polling chaque frame)
+            gestionnaireSucces.verifier(Succes.RANCHER,          ferme.getNombreAnimaux());
+            gestionnaireSucces.verifier(Succes.FERMIER_PROSPERE, joueur.getTotalMonnaieGagnee());
+
             // ── Tutoriel (sidebar) ───────────────────────────────────────────
             dessinerTutoriel(g2);
 
@@ -337,6 +387,13 @@ public class VuePrincipale extends JFrame {
             EtatJeu etat = partie.getEtat();
             if (etat == EtatJeu.VICTOIRE || etat == EtatJeu.DEFAITE) {
                 dessinerFinDePartie(g2, etat);
+            }
+
+            // ── Boutique d'améliorations ─────────────────────────────────────
+            if (etat == EtatJeu.UPGRADE_SHOP) {
+                vueUpgrades.dessiner(g2,
+                        Constantes.LARGEUR_VIEWPORT, Constantes.HAUTEUR_VIEWPORT,
+                        joueur);
             }
 
             // ── Message flash ────────────────────────────────────────────────
@@ -426,6 +483,9 @@ public class VuePrincipale extends JFrame {
                     double vx = zf[0] + 60 + Math.random() * (zf[2] - 120);
                     double vy = zf[1] + 100 + Math.random() * (zf[3] - 200);
                     v.setX(vx); v.setY(vy);
+                    if (upgrades.cowSpeedMulti != 1.0) {
+                        v.appliquerMultiVitesse(upgrades.cowSpeedMulti);
+                    }
                     ferme.ajouterVache(v);
                     vueInventaire.setSelection(-1, -1);
                     flash("Vache déployée !");
@@ -464,7 +524,8 @@ public class VuePrincipale extends JFrame {
             g2.fillRect(0, 0, Constantes.LARGEUR_VIEWPORT, Constantes.HAUTEUR_VIEWPORT);
 
             int cx = Constantes.LARGEUR_VIEWPORT / 2;
-            int cy = Constantes.HAUTEUR_VIEWPORT / 2 - 80;
+            // Décalé vers le haut pour laisser la place au leaderboard en bas
+            int cy = 180;
             boolean victoire = (etat == EtatJeu.VICTOIRE);
             String titre = victoire ? "NIVEAU TERMINÉ !" : "GAME OVER";
             Color couleur = victoire ? new Color(80, 255, 80) : new Color(255, 80, 80);
@@ -508,9 +569,29 @@ public class VuePrincipale extends JFrame {
             g2.setColor(Color.WHITE);
             g2.setFont(new Font("SansSerif", Font.PLAIN, 13));
             String sub = victoire
-                    ? "Appuyez sur [ESPACE] pour le niveau suivant"
+                    ? "Appuyez sur [ESPACE] pour la boutique d'améliorations"
                     : "Appuyez sur [ESPACE] pour recommencer";
-            g2.drawString(sub, cx - g2.getFontMetrics().stringWidth(sub)/2, py+panH+30);
+            g2.drawString(sub, cx - g2.getFontMetrics().stringWidth(sub)/2, py+panH+22);
+
+            // ── Leaderboard ───────────────────────────────────────────────────
+            int lbY = py + panH + 44;
+            vueTableauScores.dessiner(g2, tableauScores, cx, lbY + 90);
+
+            // ── Enregistrement du score (une seule fois par session) ──────────
+            if (!scoreEnregistre) {
+                scoreEnregistre = true;
+                int finalScore  = sc.calculerScore();
+                // Utilise invokeLater pour éviter un re-entrant dans paintComponent
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    String ini = JOptionPane.showInputDialog(
+                            VuePrincipale.this,
+                            "Entrez vos initiales (3 lettres) :",
+                            "Nouveau score : " + finalScore,
+                            JOptionPane.PLAIN_MESSAGE);
+                    tableauScores.ajouter(ini, finalScore, partie.getNiveau());
+                    tableauScores.sauvegarder();
+                });
+            }
         }
 
         // ── Tutoriel sidebar ─────────────────────────────────────────────────
@@ -555,10 +636,10 @@ public class VuePrincipale extends JFrame {
         ControleurAttaque ca = controleurJeu.getControleurAttaque();
         ControleurCombat  cc = controleurJeu.getControleurCombat();
         if (ca != null && ca.isEnCombat()) {
-            ca.getAttaqueCourante().frapperManuel(arme);
+            ca.getAttaqueCourante().frapperManuel(arme, upgrades.dommageMulti);
             triggerHitEffet(ca.getAliensVisuels());
         } else if (cc != null && cc.isEnCombat()) {
-            cc.getAttaqueBoss().frapperManuel(arme);
+            cc.getAttaqueBoss().frapperManuel(arme, upgrades.dommageMulti);
             if (cc.getBossVisuel() != null) {
                 com.fermedefense.modele.combat.AlienVisuel bv = cc.getBossVisuel();
                 vueEffetHit.trigger(camera.toScreenX(bv.getX()) + 48,
@@ -579,6 +660,48 @@ public class VuePrincipale extends JFrame {
         }
     }
 
+    // ── Upgrade shop helpers ──────────────────────────────────────────────────
+
+    /** Transition vers le niveau suivant après la boutique. */
+    private void passerAuNiveauSuivant() {
+        partie.niveauSuivant(
+                Constantes.TEMPS_NIVEAU_MS + (partie.getNiveau() - 1) * 15_000L);
+        partie.demarrer();
+        joueur.soigner(joueur.getPointsDeVieMax());
+        controleurJeu.initialiserNiveau(partie);
+        flash("Niveau " + partie.getNiveau() + " !");
+    }
+
+    /** Tente d'acheter l'upgrade sélectionnée dans la boutique. */
+    private void acheterUpgrade() {
+        int cout = vueUpgrades.getCoutSelectionne();
+        if (!joueur.depenser(cout)) {
+            flash("Or insuffisant !");
+            return;
+        }
+        switch (vueUpgrades.getSelectionIndex()) {
+            case 0 -> { // Max PV +25
+                joueur.addPvMax(25);
+                flash("PV max +25 !");
+            }
+            case 1 -> { // Dégâts +10 %
+                upgrades.dommageMulti *= 1.10;
+                flash("Dégâts arme +10 % !");
+            }
+            case 2 -> { // Vitesse vache +20 %
+                upgrades.cowSpeedMulti *= 1.20;
+                for (com.fermedefense.modele.ferme.Vache v : ferme.getVaches()) {
+                    v.appliquerMultiVitesse(1.20);
+                }
+                flash("Croissance vache +20 % !");
+            }
+            case 3 -> { // Or de départ +50
+                upgrades.startingGoldBonus += 50;
+                flash("Or de départ +50 g !");
+            }
+        }
+    }
+
     // ── Clavier ───────────────────────────────────────────────────────────────
 
     private class ActionKeyListener extends KeyAdapter {
@@ -590,21 +713,39 @@ public class VuePrincipale extends JFrame {
             if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                 EtatJeu etat = partie.getEtat();
                 if (etat == EtatJeu.VICTOIRE) {
-                    partie.niveauSuivant(
-                            Constantes.TEMPS_NIVEAU_MS + (partie.getNiveau() - 1) * 15_000L);
-                    partie.demarrer();
-                    joueur.soigner(joueur.getPointsDeVieMax());
-                    controleurJeu.initialiserNiveau(partie);
-                    flash("Niveau " + partie.getNiveau() + " !");
+                    // Aller à la boutique d'améliorations
+                    scoreEnregistre = false; // reset pour la prochaine fin
+                    partie.entrerUpgradeShop();
                     return;
                 } else if (etat == EtatJeu.DEFAITE) {
+                    scoreEnregistre = false;
                     partie.niveauSuivant(Constantes.TEMPS_NIVEAU_MS);
                     partie.demarrer();
                     joueur.soigner(joueur.getPointsDeVieMax());
                     controleurJeu.initialiserNiveau(partie);
                     flash("Recommençons !");
                     return;
+                } else if (etat == EtatJeu.UPGRADE_SHOP) {
+                    // Passer la boutique → niveau suivant
+                    passerAuNiveauSuivant();
+                    return;
                 }
+            }
+
+            // ── Boutique d'améliorations ──────────────────────────────────────
+            if (partie.getEtat() == EtatJeu.UPGRADE_SHOP) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_LEFT:
+                        vueUpgrades.selectionPrecedente();
+                        return;
+                    case KeyEvent.VK_RIGHT:
+                        vueUpgrades.selectionSuivante();
+                        return;
+                    case KeyEvent.VK_ENTER:
+                        acheterUpgrade();
+                        return;
+                }
+                return; // bloquer autres touches pendant la boutique
             }
 
             // ── Vendeur actif ─────────────────────────────────────────────────

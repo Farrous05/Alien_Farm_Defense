@@ -108,6 +108,13 @@ public class Partie {
     }
 
     /**
+     * Fait entrer le jeu dans l'état UPGRADE_SHOP (entre deux niveaux).
+     */
+    public void entrerUpgradeShop() {
+        this.etat = EtatJeu.UPGRADE_SHOP;
+    }
+
+    /**
      * Passe au niveau suivant : augmente la difficulté.
      *
      * @param nouveauTemps nouveau temps total en ms
