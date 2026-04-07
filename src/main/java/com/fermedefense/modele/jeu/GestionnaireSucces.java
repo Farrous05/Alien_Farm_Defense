@@ -76,6 +76,17 @@ public class GestionnaireSucces implements Serializable {
         this.onDeblocage = r;
     }
 
+    /**
+     * Réinitialise tous les succès (appelé au début d'une nouvelle partie).
+     */
+    public void reinitialiser() {
+        debloquees.clear();
+        for (Succes s : Succes.values()) {
+            compteurs.put(s, 0);
+        }
+        getPendants().clear();
+    }
+
     private Queue<Succes> getPendants() {
         if (pendants == null) pendants = new LinkedList<>();
         return pendants;

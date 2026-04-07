@@ -171,7 +171,7 @@ public class VuePrincipale extends JFrame {
         // ── Leaderboard, succès & upgrades ───────────────────────────────────
         this.tableauScores    = TableauScores.charger();
         this.vueTableauScores = new VueTableauScores();
-        this.gestionnaireSucces = GestionnaireSucces.charger();
+        this.gestionnaireSucces = new GestionnaireSucces();
         this.vueSucces        = new VueSucces();
         this.upgrades         = new Upgrades();
         this.vueUpgrades      = new VueUpgrades();
@@ -182,7 +182,6 @@ public class VuePrincipale extends JFrame {
             while ((s = gestionnaireSucces.consommerPendant()) != null) {
                 vueSucces.notifier(s);
             }
-            gestionnaireSucces.sauvegarder();
         });
 
         // Contrôleurs
@@ -719,6 +718,8 @@ public class VuePrincipale extends JFrame {
                     return;
                 } else if (etat == EtatJeu.DEFAITE) {
                     scoreEnregistre = false;
+                    gestionnaireSucces.reinitialiser();
+                    controleurJeu.resetTotalAliensElimines();
                     partie.niveauSuivant(Constantes.TEMPS_NIVEAU_MS);
                     partie.demarrer();
                     joueur.soigner(joueur.getPointsDeVieMax());

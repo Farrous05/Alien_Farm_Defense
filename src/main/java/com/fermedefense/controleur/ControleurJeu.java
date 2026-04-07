@@ -231,4 +231,7 @@ public class ControleurJeu {
     public ActionDuree getActionEnCours() { return actionEnCours; }
     public void setActionEnCours(ActionDuree action) { this.actionEnCours = action; }
     public int getTotalAliensElimines() { return totalAliensElimines; }
+
+    /** Remet à zéro le compteur d'aliens (appelé au redémarrage d'une partie). */
+    public void resetTotalAliensElimines() { totalAliensElimines = 0; }
 }
