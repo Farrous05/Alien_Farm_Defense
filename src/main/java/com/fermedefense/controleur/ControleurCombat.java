@@ -97,6 +97,10 @@ public class ControleurCombat {
                 attaqueBoss.mettreAJour(deltaMs, joueur);
                 bossVisuel.mettreAJour(deltaMs);
 
+                if (!boss.isPhase2Activee() && boss.getRatioPv() < 0.5) {
+                    boss.enrager();
+                }
+
                 if (attaqueBoss.isTerminee()) {
                     resultat = attaqueBoss.getResultat();
                     if (resultat == ResultatCombat.VICTOIRE) {

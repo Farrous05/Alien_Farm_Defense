@@ -26,7 +26,7 @@ public final class Constantes {
     // --- Joueur ---
     public static final double VITESSE_JOUEUR = 180;
     public static final int PV_MAX_JOUEUR = 100;
-    public static final int MONNAIE_INIT = 200;
+    public static final int MONNAIE_INIT = 120;
 
     // --- Partie ---
     public static final long TEMPS_NIVEAU_MS = 120_000; // 2 min

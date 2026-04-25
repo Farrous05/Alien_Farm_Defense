@@ -22,7 +22,7 @@ public class Vache extends Animal implements ObjetInventaire {
     /** Durée de la phase adulte avant d'être productive (ms). */
     public static final long TEMPS_ADULTE_MS = 15_000;
     /** Intervalle entre deux productions (ms). */
-    public static final long CYCLE_PROD_MS   = 8_000;
+    public static final long CYCLE_PROD_MS   = 6_500;
     /** Monnaie produite par cycle. */
     public static final int  REVENU_PAR_CYCLE = 10;
 

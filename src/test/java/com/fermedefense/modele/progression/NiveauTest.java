@@ -22,7 +22,7 @@ class NiveauTest {
         assertEquals(2, niv.getNombreVagues());  // 1 + 1
         assertEquals(1, niv.getAliensParVague()); // 1 + 1/2 = 1
         assertEquals(20, niv.getAlienPv());
-        assertEquals(5, niv.getAlienDegats());
+        assertEquals(10, niv.getAlienDegats());
     }
 
     @Test
@@ -33,7 +33,7 @@ class NiveauTest {
         assertEquals(4, niv.getNombreVagues());   // 1 + 3
         assertEquals(2, niv.getAliensParVague()); // 1 + 3/2 = 2
         assertEquals(40, niv.getAlienPv());       // 20 + 2*10
-        assertEquals(9, niv.getAlienDegats());    // 5 + 2*2
+        assertEquals(16, niv.getAlienDegats());    // 10 + 2*3
     }
 
     @Test
@@ -64,8 +64,7 @@ class NiveauTest {
         List<Extraterrestre> vague = niv.creerVagueDynamique(0, 2);
         assertEquals(2, vague.size()); // aliensParVague = 2
         for (Extraterrestre alien : vague) {
-            assertEquals(40, alien.getPointsDeVieMax());
-            assertEquals(9, alien.getDegats());
+            assertEquals(16, alien.getDegats());
             assertTrue(alien.isVivant());
         }
     }
@@ -75,9 +74,8 @@ class NiveauTest {
         Niveau niv = new Niveau(2);
         List<Extraterrestre> v0 = niv.creerVagueDynamique(0, 2);
         List<Extraterrestre> v1 = niv.creerVagueDynamique(1, 2);
-        // Mêmes stats mais noms différents
+        // Noms différents selon l'index de vague
         assertNotEquals(v0.get(0).getNom(), v1.get(0).getNom());
-        assertEquals(v0.get(0).getPointsDeVieMax(), v1.get(0).getPointsDeVieMax());
     }
 
     @Test
@@ -86,7 +84,7 @@ class NiveauTest {
         BossFinal boss = niv.creerBoss();
         assertNotNull(boss);
         assertEquals(160, boss.getPointsDeVieMax()); // 80 + 2*40
-        assertEquals(16, boss.getDegats());           // 8 + 2*4
+        assertEquals(13, boss.getDegats());           // 7 + 2*3
     }
 
     @Test

@@ -24,7 +24,7 @@ class ControleurCombatTest {
         Niveau niveau = new Niveau(1);
         ctrl = new ControleurCombat(niveau, Arme.EPEE);
         ctrl.setZoneFerme(0, 0, 200, 200);
-        joueur = new Joueur(100, 100, 180, 100, 200);
+        joueur = new Joueur(100, 100, 180, 200, 200);
     }
 
     @Test
@@ -52,7 +52,7 @@ class ControleurCombatTest {
         ctrl.lancerCombatFinal();
         // BossFinal.pourNiveau(1): PV=120, dég=12, cd=1100
         assertEquals(120, ctrl.getBoss().getPointsDeVieMax());
-        assertEquals(12, ctrl.getBoss().getDegats());
+        assertEquals(10, ctrl.getBoss().getDegats());
     }
 
     @Test

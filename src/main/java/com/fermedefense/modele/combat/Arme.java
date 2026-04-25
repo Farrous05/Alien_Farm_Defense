@@ -16,7 +16,7 @@ public class Arme implements ObjetInventaire {
     /** Épée par défaut disponible dès le départ. */
     public static final Arme EPEE = new Arme("Épée", 15, 1000);
     public static final Arme SHOTGUN = new Arme("Shotgun", 50, 2000);
-    public static final Arme MINIGUN = new Arme("Minigun", 8, 150);
+    public static final Arme MINIGUN = new Arme("Minigun", 8, 250);
 
     private final String nom;
     private final int degats;

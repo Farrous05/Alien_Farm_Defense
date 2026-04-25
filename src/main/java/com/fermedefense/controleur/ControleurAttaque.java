@@ -178,6 +178,9 @@ public class ControleurAttaque {
                     for (int i = 1; i <= abductions; i++) {
                         ferme.enleverDerniereVache();
                         totalVachesEnlevees++;
+                        if (joueur.getMonnaie() > 0) {
+                            joueur.depenser(Math.min(30, joueur.getMonnaie()));
+                        }
                         int idxFui = attaqueCourante.getIndexAlienCourant() - i;
                         if (idxFui >= 0 && idxFui < aliensVisuels.size()) {
                             aliensVisuels.get(idxFui).setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
@@ -199,7 +202,12 @@ public class ControleurAttaque {
                         }
                     } else {
                         derniereVacheEnlevee = ferme.enleverDerniereVache();
-                        if (derniereVacheEnlevee != null) totalVachesEnlevees++;
+                        if (derniereVacheEnlevee != null) {
+                            totalVachesEnlevees++;
+                            if (joueur.getMonnaie() > 0) {
+                                joueur.depenser(Math.min(30, joueur.getMonnaie()));
+                            }
+                        }
                         for (AlienVisuel av : aliensVisuels) {
                             if (av.getEtat() == AlienVisuel.EtatVisuel.COMBAT) {
                                 av.setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
@@ -220,7 +228,12 @@ public class ControleurAttaque {
                 if (tousSortis) {
                     if (attaqueSansDefense) {
                         derniereVacheEnlevee = ferme.enleverDerniereVache();
-                        if (derniereVacheEnlevee != null) totalVachesEnlevees++;
+                        if (derniereVacheEnlevee != null) {
+                            totalVachesEnlevees++;
+                            if (joueur.getMonnaie() > 0) {
+                                joueur.depenser(Math.min(30, joueur.getMonnaie()));
+                            }
+                        }
                         messageFlash = "Une vache a été enlevée !";
                     }
                     phase = PhaseAttaque.INACTIF;

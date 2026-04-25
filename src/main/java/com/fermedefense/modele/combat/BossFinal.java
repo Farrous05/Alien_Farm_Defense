@@ -9,6 +9,8 @@ package com.fermedefense.modele.combat;
 public class BossFinal extends Extraterrestre {
 
     private final int recompense; // monnaie gagnée si le boss est vaincu
+    private boolean phase2Activee = false;
+    private static final double MULTIPLICATEUR_ENRAGE = 1.75;
 
     /**
      * Crée un boss final.
@@ -30,10 +32,26 @@ public class BossFinal extends Extraterrestre {
      */
     public static BossFinal pourNiveau(int niveau) {
         int pv = 80 + niveau * 40;
-        int deg = 8 + niveau * 4;
+        int deg = 7 + niveau * 3;
         long cd = Math.max(600, 1200 - niveau * 100L);
         int recomp = 100 + niveau * 50;
         return new BossFinal("Boss Alien Nv." + niveau, pv, deg, cd, recomp);
+    }
+
+    public void enrager() {
+        this.phase2Activee = true;
+    }
+
+    public boolean isPhase2Activee() {
+        return phase2Activee;
+    }
+
+    @Override
+    public int getDegats() {
+        if (phase2Activee) {
+            return (int) Math.round(super.getDegats() * MULTIPLICATEUR_ENRAGE);
+        }
+        return super.getDegats();
     }
 
     public int getRecompense() {
