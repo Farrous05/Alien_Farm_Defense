@@ -6,12 +6,13 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -25,6 +26,7 @@ import javax.swing.border.EmptyBorder;
 import com.fermedefense.Main;
 import com.fermedefense.modele.jeu.TableauScores;
 import com.fermedefense.utilitaire.Constantes;
+import com.fermedefense.utilitaire.SoundManager;
 
 public class VueMenuPrincipal extends JFrame {
 
@@ -168,6 +170,7 @@ public class VueMenuPrincipal extends JFrame {
             panneauMain.repaint();
         });
         timer.start();
+        SoundManager.jouerThemeMenu();
 
         panneauMain.setLayout(new BoxLayout(panneauMain, BoxLayout.Y_AXIS));
         panneauMain.setPreferredSize(new Dimension(800, 600)); 
@@ -185,15 +188,22 @@ public class VueMenuPrincipal extends JFrame {
         
         JButton btnNouvellePartie = creerBouton("Nouvelle Partie");
         btnNouvellePartie.addActionListener(e -> {
+            SoundManager.jouerClic();
+            SoundManager.arreterMusique();
             this.dispose();
             Main.lancerJeu();
         });
 
         JButton btnScores = creerBouton("Meilleurs Scores");
-        btnScores.addActionListener(e -> afficherLeaderboard());
+        btnScores.addActionListener(e -> {
+            SoundManager.jouerClic();
+            afficherLeaderboard();
+        });
 
         JButton btnQuitter = creerBouton("Quitter");
         btnQuitter.addActionListener(e -> {
+            SoundManager.jouerClic();
+            SoundManager.arreterMusique();
             System.exit(0);
         });
 

@@ -3,25 +3,38 @@ package com.fermedefense.vue;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Image;
 
+import javax.imageio.ImageIO;
+
+import com.fermedefense.modele.combat.Arme;
+import com.fermedefense.modele.combat.Bombe;
+import com.fermedefense.modele.ferme.Vache;
 import com.fermedefense.modele.joueur.Inventaire;
 import com.fermedefense.modele.joueur.ObjetInventaire;
-import java.awt.Image;
-import javax.imageio.ImageIO;
+import com.fermedefense.modele.joueur.Potion;
 
 public class VueInventaire {
     
     private static Image imgEpee;
     private static Image imgShotgun;
     private static Image imgMinigun;
+    private static Image imgRayonLaser;
+    private static Image imgVache;
+    private static Image imgPotion;
+    private static Image imgBombe;
 
     static {
         try {
             imgEpee = ImageIO.read(VueInventaire.class.getResource("/images/spr_epee.png"));
             imgShotgun = ImageIO.read(VueInventaire.class.getResource("/images/spr_shotgun.png"));
             imgMinigun = ImageIO.read(VueInventaire.class.getResource("/images/spr_minigun.png"));
+            imgRayonLaser = ImageIO.read(VueInventaire.class.getResource("/images/effects/laserGreen_burst.png"));
+            imgVache = ImageIO.read(VueInventaire.class.getResource("/images/vache_bebe.png"));
+            imgPotion = ImageIO.read(VueInventaire.class.getResource("/images/market/potion_red.png"));
+            imgBombe = ImageIO.read(VueInventaire.class.getResource("/images/market/chest.png"));
         } catch (Exception e) {
-            System.err.println("Erreur chargement images armes : " + e.getMessage());
+            System.err.println("Erreur chargement images inventaire : " + e.getMessage());
         }
     }
 
@@ -80,10 +93,7 @@ public class VueInventaire {
                         g2.drawString("E", cx + 2, cy + 10);
                     }
                     
-                    Image spr = null;
-                    if(obj.getNom().toLowerCase().contains("épée") || obj.getNom().toLowerCase().contains("epee")) spr = imgEpee;
-                    else if(obj.getNom().toLowerCase().contains("shotgun")) spr = imgShotgun;
-                    else if(obj.getNom().toLowerCase().contains("minigun")) spr = imgMinigun;
+                    Image spr = getSpriteObjet(obj);
                     
                     if (spr != null) {
                         g2.drawImage(spr, cx + 2, cy + 2, tailleCase - 4, tailleCase - 4, null);
@@ -95,6 +105,26 @@ public class VueInventaire {
                 }
             }
         }
+    }
+
+    private Image getSpriteObjet(ObjetInventaire obj) {
+        if (obj instanceof Vache) {
+            return imgVache;
+        }
+        if (obj instanceof Potion) {
+            return imgPotion;
+        }
+        if (obj instanceof Bombe) {
+            return imgBombe;
+        }
+        if (obj instanceof Arme arme) {
+            String nom = arme.getNom().toLowerCase();
+            if (nom.contains("ep") || nom.contains("ép")) return imgEpee;
+            if (nom.contains("shotgun")) return imgShotgun;
+            if (nom.contains("minigun")) return imgMinigun;
+            if (nom.contains("rayon") || nom.contains("laser")) return imgRayonLaser;
+        }
+        return null;
     }
     
     public void setSelection(int ligne, int colonne) {

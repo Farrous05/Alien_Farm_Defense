@@ -892,6 +892,24 @@ Entre les niveaux, l'overlay de la boutique présente 4 cartes colorées. La car
 [INFO] BUILD SUCCESS
 ```
 
+### Correctifs et améliorations récents (avril 2026)
+
+Les améliorations suivantes ont été intégrées après la version initiale du rapport :
+
+- **Fenêtre et UI adaptatives** : la fenêtre est ajustée automatiquement à l'écran disponible ; la barre de progression est ancrée à la hauteur réelle du panneau pour rester visible.
+- **Audio centralisé** : ajout d'un `SoundManager` (thèmes menu/exploration/combat, clics, jingle) avec chargement robuste et fallback si un fichier est indisponible.
+- **Musique de combat fiabilisée** : le thème combat est réappliqué tant qu'une vague ou le boss est actif.
+- **Combat intermédiaire rééquilibré** : réduction des dégâts reçus, plafonnement du nombre d'aliens simultanés et temps d'abduction plus permissif en début de jeu.
+- **Bug critique boss corrigé** : si un alien/boss meurt via un effet externe (ex. bombe), le combat se finalise correctement (plus de blocage à PV affichés à 0).
+- **Détection ferme harmonisée** : ajout d'une tolérance de frontière (marge) pour éviter les faux messages « hors ferme » près de la séparation ferme/marché.
+- **Déploiement des vaches** : placement en grille compacte au centre de la ferme (au lieu d'un placement aléatoire dispersé).
+- **Inventaire enrichi** : affichage des sprites des objets (vache, potion, bombe, rayon laser) à la place des lettres quand les assets existent.
+- **Ergonomie des contrôles** :
+    - suppression de la pause clavier et de son hint ;
+    - ajout de raccourcis rapides inventaire : `W` (potion), `X` (bombe) ;
+    - clarification des consignes d'inventaire (clic gauche sur l'objet).
+- **Attaque manuelle plus cohérente** : pendant une vague active et défendable, l'appui sur `A` est pris en compte sans faux « alien trop loin ».
+
 ---
 
 ## 7. Documentation utilisateur
@@ -927,7 +945,10 @@ Gérer votre ferme, acheter des armes et défendre vos vaches contre les extrate
 | Touche | Action |
 |--------|--------|
 | Flèches directionnelles ou Z/Q/S/D | Déplacer le fermier |
-| P | Pause / Reprendre |
+| A | Attaquer avec l'arme équipée |
+| E | Changer d'arme équipée |
+| W | Utiliser rapidement une potion (si disponible) |
+| X | Utiliser rapidement une bombe (si disponible) |
 
 Le monde est divisé en deux zones :
 - **Gauche (0–1 000 px)** : la ferme — vos vaches s'y trouvent.
@@ -937,7 +958,8 @@ Le monde est divisé en deux zones :
 
 - Vos vaches évoluent automatiquement : **Bébé** (marron) → **Adulte** (noir et blanc) → **Productive** (dorée).
 - En phase **Productive**, elles accumulent de l'or visible comme un badge au-dessus d'elles.
-- Approchez-vous d'une vache productive et appuyez sur **R** pour récolter l'or. Une barre cyan s'affiche pendant la récolte (2 secondes).
+- La récolte est **automatique** (plus besoin d'appuyer sur une touche).
+- Pour déployer une vache depuis l'inventaire : cliquez sur sa case en étant dans la ferme.
 
 #### Achats au marché
 
@@ -949,8 +971,18 @@ Le monde est divisé en deux zones :
 #### Combat
 
 - Des **vagues d'aliens** apparaissent automatiquement selon la barre de progression en bas de l'écran (marqueurs triangulaires jaunes).
-- Soyez dans la ferme pour défendre vos vaches — le combat est automatique, votre arme équipée s'en charge.
+- Soyez dans la ferme pour défendre vos vaches.
+- Pendant les vagues et le boss, utilisez **A** pour frapper avec l'arme équipée.
 - Si vous perdez un combat intermédiaire, un alien repart avec une vache. Si vous perdez le boss final, c'est **Game Over**.
+
+#### Inventaire (rappel rapide)
+
+- **Clic gauche** sur un objet de l'inventaire :
+    - Vache → déploiement à la ferme
+    - Arme → utilisation/attaque
+    - Potion → soin
+    - Bombe → attaque instantanée
+- Raccourcis rapides : `W` (potion), `X` (bombe).
 
 #### Boutique d'améliorations
 

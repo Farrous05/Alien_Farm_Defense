@@ -13,6 +13,7 @@ import com.fermedefense.modele.ferme.Ferme;
 import com.fermedefense.modele.ferme.Vache;
 import com.fermedefense.modele.joueur.Joueur;
 import com.fermedefense.modele.progression.Niveau;
+import com.fermedefense.utilitaire.SoundManager;
 
 /**
  * Gère les attaques extraterrestres intermédiaires.
@@ -94,16 +95,16 @@ public class ControleurAttaque {
     private boolean attaqueSansDefense = false;
 
     public void declencherVague(int indexVague, com.fermedefense.modele.jeu.Carte carte, com.fermedefense.modele.joueur.Joueur joueur) {
-        // Vérifier si le joueur est dans la zone ferme
-        int jx = (int) joueur.getX();
-        int jy = (int) joueur.getY();
-        int jt = joueur.getTaille();
-        com.fermedefense.modele.jeu.Zone zone = carte.getZoneA(jx + jt / 2, jy + jt / 2);
-        attaqueSansDefense = (zone != com.fermedefense.modele.jeu.Zone.FERME);
+        // Tolérance frontalière pour coller au ressenti visuel côté joueur.
+        attaqueSansDefense = !carte.estJoueurDansFerme(joueur, 40);
 
         int nbCows = ferme.getNombreAnimaux();
         List<Extraterrestre> aliens = niveau.creerVagueDynamique(indexVague, Math.max(1, nbCows));
         attaqueCourante = attaqueSansDefense ? null : new Attaque(aliens);
+        if (attaqueCourante != null) {
+            // Les vagues intermédiaires sont volontairement plus permissives que le boss.
+            attaqueCourante.setDegatsRecusMulti(0.45);
+        }
         derniereVacheEnlevee = null;
 
         // Créer les aliens visuels : chaque alien cible la position d'une vache réelle
@@ -128,6 +129,12 @@ public class ControleurAttaque {
         }
 
         phase = PhaseAttaque.APPROCHE;
+        if (attaqueSansDefense) {
+            messageFlash = "Attaque alien ! Vous êtes hors ferme : retournez défendre !";
+        } else {
+            messageFlash = "Attaque alien ! Préparez-vous au combat.";
+        }
+        SoundManager.jouerThemeCombat();
     }
 
     /**
@@ -239,6 +246,7 @@ public class ControleurAttaque {
                     phase = PhaseAttaque.INACTIF;
                     aliensVisuels = Collections.emptyList();
                     attaqueSansDefense = false;
+                    SoundManager.jouerThemeExploration();
                 }
                 break;
 

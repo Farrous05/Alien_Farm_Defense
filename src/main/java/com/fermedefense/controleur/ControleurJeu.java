@@ -19,6 +19,7 @@ import com.fermedefense.modele.joueur.Upgrades;
 import com.fermedefense.modele.progression.BarreProgression;
 import com.fermedefense.modele.progression.EvenementTemporel;
 import com.fermedefense.modele.progression.Niveau;
+import com.fermedefense.utilitaire.SoundManager;
 
 /**
  * Contrôleur principal du jeu.
@@ -145,12 +146,14 @@ public class ControleurJeu {
     private void tickProgression(long delta) {
         // Si une attaque intermédiaire est en cours, la faire avancer
         if (controleurAttaque != null && controleurAttaque.isActif()) {
+            SoundManager.jouerThemeCombat();
             controleurAttaque.mettreAJour(delta, joueur);
             if (!controleurAttaque.isActif()) {
                 // Vague terminée
                 if (controleurAttaque.getResultat() == ResultatCombat.DEFAITE) {
                     partie.terminer(false);
                 } else if (controleurAttaque.getResultat() == ResultatCombat.VICTOIRE) {
+                    SoundManager.jouerJingle();
                     // Mettre à jour le score de la vague
                     com.fermedefense.modele.combat.Attaque att = controleurAttaque.getAttaqueCourante();
                     int nbAliens = att != null ? att.getAliens().size() : 0;
@@ -170,10 +173,12 @@ public class ControleurJeu {
 
         // Si le combat final est en cours
         if (controleurCombat != null && controleurCombat.isActif()) {
+            SoundManager.jouerThemeCombat();
             controleurCombat.mettreAJour(delta, joueur);
             if (controleurCombat.isTermine()) {
                 boolean victoire = controleurCombat.getResultat() == ResultatCombat.VICTOIRE;
                 if (victoire) {
+                    SoundManager.jouerJingle();
                     com.fermedefense.modele.combat.Attaque attBoss = controleurCombat.getAttaqueBoss();
                     int degats = attBoss != null ? attBoss.getTotalDegatsInfliges() : 0;
                     partie.getScoreNiveau().enregistrerBossVaincu(degats);

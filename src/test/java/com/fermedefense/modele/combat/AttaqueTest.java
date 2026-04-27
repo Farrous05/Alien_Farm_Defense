@@ -144,4 +144,20 @@ class AttaqueTest {
 
         assertTrue(a.isTerminee(), "Le combat doit finir en 60 secondes");
     }
+
+    @Test
+    void alienTueParEffetExterneTermineLeCombat() {
+        BossFinal boss = BossFinal.pourNiveau(2);
+        Attaque a = new Attaque(boss);
+
+        // Simule une bombe qui tue le boss hors frapperManuel.
+        boss.subirDegats(10_000);
+        assertFalse(boss.isVivant());
+
+        // Le tick suivant doit constater la mort et finaliser l'attaque.
+        a.mettreAJour(16, joueur);
+
+        assertEquals(ResultatCombat.VICTOIRE, a.getResultat());
+        assertTrue(a.isTerminee());
+    }
 }

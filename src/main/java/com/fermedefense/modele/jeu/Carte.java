@@ -76,6 +76,29 @@ public class Carte {
     }
 
     /**
+     * Vérifie si le joueur est considéré dans la ferme avec une tolérance
+     * autour de la frontière verticale ferme/marché.
+     */
+    public boolean estJoueurDansFerme(com.fermedefense.modele.joueur.Joueur joueur, int margePx) {
+        if (joueur == null) return false;
+        int xRepere = (int) joueur.getX() + joueur.getTaille() / 2;
+        int yRepere = (int) joueur.getY() + joueur.getTaille() - 2;
+        return estPositionDansFermeToleree(xRepere, yRepere, margePx);
+    }
+
+    /**
+     * Variante positionnelle de la vérification de zone ferme avec tolérance.
+     */
+    public boolean estPositionDansFermeToleree(int x, int y, int margePx) {
+        if (x < 0 || x >= largeur || y < 0 || y >= hauteur) {
+            return false;
+        }
+        int split = largeur / 2;
+        int marge = Math.max(0, margePx);
+        return x <= split + marge;
+    }
+
+    /**
      * Contraint la position d'un joueur dans les limites de la carte.
      *
      * @param joueur le joueur à contraindre

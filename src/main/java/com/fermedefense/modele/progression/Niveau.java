@@ -81,8 +81,9 @@ public class Niveau {
      */
     public List<Extraterrestre> creerVagueDynamique(int indexVague, int nbCows) {
         List<Extraterrestre> aliens = new ArrayList<>();
-        int aliensToSpawn = Math.max(1, nbCows); // Minimum 1 alien
-        long timerAbduction = Math.max(2000, 6000 - (numero - 1) * 700L); // 6s au lvl 1, 5.3s au lvl 2...
+        int capAliens = Math.max(2, 2 + numero); // Niv.1=3 max, puis augmente progressivement
+        int aliensToSpawn = Math.max(1, Math.min(nbCows, capAliens));
+        long timerAbduction = Math.max(3500, 9000 - (numero - 1) * 700L); // plus de marge en début de jeu
 
         for (int i = 0; i < aliensToSpawn; i++) {
             Extraterrestre.TypeAlien type = Extraterrestre.TypeAlien.NORMAL;

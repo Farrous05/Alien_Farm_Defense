@@ -10,6 +10,7 @@ import com.fermedefense.modele.combat.BossFinal;
 import com.fermedefense.modele.combat.ResultatCombat;
 import com.fermedefense.modele.joueur.Joueur;
 import com.fermedefense.modele.progression.Niveau;
+import com.fermedefense.utilitaire.SoundManager;
 
 /**
  * Gère la logique du combat final (boss) en fin de niveau.
@@ -77,6 +78,7 @@ public class ControleurCombat {
         double cibleY = fermeY + fermeH / 2.0;
         bossVisuel = new AlienVisuel(departX, cibleY, cibleX, cibleY, VITESSE_BOSS_VISUEL);
         phase = PhaseBoss.APPROCHE;
+        SoundManager.jouerThemeCombat();
     }
 
     /**
@@ -119,6 +121,7 @@ public class ControleurCombat {
                     termine = true;
                     phase = PhaseBoss.INACTIF;
                     bossVisuel = null;
+                    SoundManager.jouerThemeExploration();
                 }
                 break;
 

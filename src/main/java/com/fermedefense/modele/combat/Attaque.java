@@ -36,6 +36,9 @@ public class Attaque {
     /** Dégâts totaux reçus par le joueur pendant cette vague. */
     private int totalDegatsRecus;
 
+    /** Multiplicateur appliqué aux dégâts reçus par le joueur. */
+    private double degatsRecusMulti;
+
     private int vachesAbducteesCeTick;
 
     public Attaque(List<Extraterrestre> aliens) {
@@ -47,6 +50,7 @@ public class Attaque {
         this.totalDegatsInfliges = 0;
         this.totalDegatsRecus = 0;
         this.vachesAbducteesCeTick = 0;
+        this.degatsRecusMulti = 1.0;
     }
 
     /**
@@ -107,6 +111,16 @@ public class Attaque {
             return;
         }
 
+        // Peut arriver si un effet externe (ex: bombe) a déjà tué l'alien courant.
+        if (!alien.isVivant()) {
+            indexAlienCourant++;
+            if (indexAlienCourant >= aliens.size()) {
+                resultat = ResultatCombat.VICTOIRE;
+            }
+            tempsCooldownAlien = 0;
+            return;
+        }
+
         // Gérer l'abduction par temps
         alien.reduireTimerAbduction(deltaMs);
         if (alien.isAbductionPrete()) {
@@ -125,8 +139,9 @@ public class Attaque {
 
         // L'alien attaque le joueur
         if (tempsCooldownAlien <= 0 && alien.isVivant()) {
-            joueur.subirDegats(alien.getDegats());
-            totalDegatsRecus += alien.getDegats();
+            int degats = Math.max(1, (int) Math.round(alien.getDegats() * degatsRecusMulti));
+            joueur.subirDegats(degats);
+            totalDegatsRecus += degats;
             tempsCooldownAlien = alien.getCooldownMs();
 
             if (!joueur.isVivant()) {
@@ -170,6 +185,14 @@ public class Attaque {
     public int getTotalDegatsInfliges() { return totalDegatsInfliges; }
     public int getTotalDegatsRecus() { return totalDegatsRecus; }
     public int getVachesAbducteesCeTick() { return vachesAbducteesCeTick; }
+
+    /**
+     * Ajuste la difficulté défensive (1.0 = dégâts normaux, 0.5 = moitié des dégâts).
+     */
+    public void setDegatsRecusMulti(double degatsRecusMulti) {
+        if (degatsRecusMulti <= 0) return;
+        this.degatsRecusMulti = degatsRecusMulti;
+    }
 
     @Override
     public String toString() {

@@ -7,6 +7,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.event.KeyAdapter;
@@ -15,15 +16,14 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
-
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 import com.fermedefense.controleur.ControleurAttaque;
 import com.fermedefense.controleur.ControleurCombat;
 import com.fermedefense.controleur.ControleurJeu;
-import com.fermedefense.controleur.ControleurMarche;
 import com.fermedefense.controleur.ControleurJoueur;
+import com.fermedefense.controleur.ControleurMarche;
 import com.fermedefense.modele.combat.Attaque;
 import com.fermedefense.modele.ferme.Ferme;
 import com.fermedefense.modele.jeu.Carte;
@@ -32,7 +32,6 @@ import com.fermedefense.modele.jeu.GestionnaireSucces;
 import com.fermedefense.modele.jeu.Partie;
 import com.fermedefense.modele.jeu.Succes;
 import com.fermedefense.modele.jeu.TableauScores;
-import com.fermedefense.modele.jeu.Zone;
 import com.fermedefense.modele.joueur.Action;
 import com.fermedefense.modele.joueur.ActionDuree;
 import com.fermedefense.modele.joueur.Joueur;
@@ -41,6 +40,7 @@ import com.fermedefense.modele.marche.ArticleMarche;
 import com.fermedefense.modele.marche.Marche;
 import com.fermedefense.modele.progression.BarreProgression;
 import com.fermedefense.utilitaire.Constantes;
+import com.fermedefense.utilitaire.SoundManager;
 
 /**
  * Fenêtre principale du jeu.
@@ -200,11 +200,21 @@ public class VuePrincipale extends JFrame {
 
         // Fenêtre
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setResizable(false);
         pack();
+        adapterTailleEcran();
         setLocationRelativeTo(null);
         panneauJeu.setFocusable(true);
         panneauJeu.requestFocusInWindow();
+    }
+
+    private void adapterTailleEcran() {
+        Dimension max = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getMaximumWindowBounds().getSize();
+        int largeur = Math.min(getWidth(), max.width);
+        int hauteur = Math.min(getHeight(), max.height);
+        if (largeur != getWidth() || hauteur != getHeight()) {
+            setSize(largeur, hauteur);
+        }
     }
 
     public void lancer() {
@@ -212,6 +222,8 @@ public class VuePrincipale extends JFrame {
         partie.demarrer();
         controleurJeu.initialiserNiveau(partie);
         controleurJeu.demarrer();
+        SoundManager.jouerJingle();
+        SoundManager.jouerThemeExploration();
     }
 
     private void flash(String msg) {
@@ -262,6 +274,7 @@ public class VuePrincipale extends JFrame {
             // ── Récolte automatique ─────────────────────────────────────────
             int totalAuto = ferme.recolterTout();
             if (totalAuto > 0) joueur.ajouterMonnaie(totalAuto);
+            if (totalAuto > 0) SoundManager.jouerClic();
 
             // ── Ferme (vaches) ──────────────────────────────────────────────
             vueFerme.dessiner(g2, camera);
@@ -310,9 +323,13 @@ public class VuePrincipale extends JFrame {
             // ── Barre de progression ─────────────────────────────────────────
             BarreProgression barre = controleurJeu.getBarreProgression();
             if (barre != null) {
+                int barreY = Math.max(10,
+                    getHeight() - vueBarreProgression.getHauteur() - 8);
+                int barreW = Math.max(1,
+                    Math.min(Constantes.LARGEUR_VIEWPORT - 20, getWidth() - 20));
                 vueBarreProgression.dessiner(g2, barre, 10,
-                        Constantes.HAUTEUR_VIEWPORT - 24,
-                        Constantes.LARGEUR_VIEWPORT - 20);
+                    barreY,
+                    barreW);
             }
 
             // ── Inventaire (sidebar) ─────────────────────────────────────────
@@ -356,8 +373,8 @@ public class VuePrincipale extends JFrame {
             // ── Popup vendeur actif ──────────────────────────────────────────
             if (actif != null) {
                 vueMarchePopup.dessinerPopup(g2, actif,
-                        Constantes.LARGEUR_VIEWPORT,
-                        Constantes.HAUTEUR_VIEWPORT,
+                        getWidth(),
+                        getHeight(),
                         partie.getNiveau());
             }
 
@@ -472,15 +489,13 @@ public class VuePrincipale extends JFrame {
         }
 
         private void deployerVache(com.fermedefense.modele.ferme.Vache v, int lig, int col) {
-            Zone zone = carte.getZoneA(
-                    (int) joueur.getX() + joueur.getTaille() / 2,
-                    (int) joueur.getY() + joueur.getTaille() / 2);
-            if (zone == Zone.FERME) {
+            if (carte.estJoueurDansFerme(joueur, 40)) {
                 if (!ferme.estPleine()) {
                     joueur.getInventaire().retirerObjet(lig, col);
                     int[] zf = carte.getZoneFerme();
-                    double vx = zf[0] + 60 + Math.random() * (zf[2] - 120);
-                    double vy = zf[1] + 100 + Math.random() * (zf[3] - 200);
+                    double[] pos = calculerPositionVacheCentre(zf, ferme.getNombreAnimaux());
+                    double vx = pos[0];
+                    double vy = pos[1];
                     v.setX(vx); v.setY(vy);
                     if (upgrades.cowSpeedMulti != 1.0) {
                         v.appliquerMultiVitesse(upgrades.cowSpeedMulti);
@@ -494,6 +509,33 @@ public class VuePrincipale extends JFrame {
             } else {
                 flash("Allez à la ferme pour déployer !");
             }
+        }
+
+        private double[] calculerPositionVacheCentre(int[] zoneFerme, int indexVache) {
+            int colonnes = 5;
+            int lignes = (int) Math.ceil(ferme.getCapaciteMax() / (double) colonnes);
+            int col = indexVache % colonnes;
+            int lig = indexVache / colonnes;
+
+            double centreX = zoneFerme[0] + zoneFerme[2] / 2.0;
+            double centreY = zoneFerme[1] + zoneFerme[3] / 2.0;
+            double ecartX = 64;
+            double ecartY = 56;
+
+            double vx = centreX + (col - (colonnes - 1) / 2.0) * ecartX;
+            double vy = centreY + (lig - (lignes - 1) / 2.0) * ecartY;
+
+            double margeX = 60;
+            double margeY = 90;
+            double minX = zoneFerme[0] + margeX;
+            double maxX = zoneFerme[0] + zoneFerme[2] - margeX;
+            double minY = zoneFerme[1] + margeY;
+            double maxY = zoneFerme[1] + zoneFerme[3] - margeY;
+
+            vx = Math.max(minX, Math.min(maxX, vx));
+            vy = Math.max(minY, Math.min(maxY, vy));
+
+            return new double[]{vx, vy};
         }
 
         private void utiliserBombe(int lig, int col) {
@@ -520,9 +562,11 @@ public class VuePrincipale extends JFrame {
 
         private void dessinerFinDePartie(Graphics2D g2, EtatJeu etat) {
             g2.setColor(new Color(0, 0, 0, 175));
-            g2.fillRect(0, 0, Constantes.LARGEUR_VIEWPORT, Constantes.HAUTEUR_VIEWPORT);
+            int panneauW = getWidth();
+            int panneauH = getHeight();
+            g2.fillRect(0, 0, panneauW, panneauH);
 
-            int cx = Constantes.LARGEUR_VIEWPORT / 2;
+            int cx = panneauW / 2;
             // Décalé vers le haut pour laisser la place au leaderboard en bas
             int cy = 180;
             boolean victoire = (etat == EtatJeu.VICTOIRE);
@@ -596,7 +640,8 @@ public class VuePrincipale extends JFrame {
         // ── Tutoriel sidebar ─────────────────────────────────────────────────
 
         private void dessinerTutoriel(Graphics2D g2) {
-            int x = Constantes.LARGEUR_VIEWPORT + 10;
+            int x = Math.min(Constantes.LARGEUR_VIEWPORT + 10,
+                    Math.max(10, getWidth() - 230));
             int y = 310;
             g2.setColor(new Color(255, 255, 255, 200));
             g2.setFont(new Font("SansSerif", Font.BOLD, 11));
@@ -608,19 +653,55 @@ public class VuePrincipale extends JFrame {
                     "Déplacer : Z Q S D / ↑↓←→",
                     "","Marché : approchez un vendeur",
                     " ↑↓ : naviguer  [R] : acheter",
-                    "","Inventaire : clic gauche",
-                    " Vache → déployer en ferme",
-                    " Arme  → attaquer",
+                    "","Inventaire : clic gauche sur l'objet",
+                    " Vache  → déployer (centre ferme)",
+                    " Arme   → équiper / attaquer",
                     " Potion → soigner",
+                    " Bombe  → dégâts instantanés",
                     "","[A] : attaquer arme équipée",
                     "[E] : changer arme",
-                    "[P] : pause",
+                    "[W] : utiliser potion",
+                    "[X] : utiliser bombe",
                     "[Espace] : niveau suivant",
                     "","Récolte : automatique !"
             }) {
                 g2.drawString(l, x, y);
                 y += 14;
             }
+        }
+
+        private int[] trouverPremierObjetInventaire(Class<?> typeObjet) {
+            for (int lig = 0; lig < joueur.getInventaire().getLignes(); lig++) {
+                for (int col = 0; col < joueur.getInventaire().getColonnes(); col++) {
+                    Object obj = joueur.getInventaire().getObjet(lig, col);
+                    if (obj != null && typeObjet.isInstance(obj)) {
+                        return new int[]{lig, col};
+                    }
+                }
+            }
+            return null;
+        }
+
+        private void utiliserPotionRapide() {
+            int[] slot = trouverPremierObjetInventaire(com.fermedefense.modele.joueur.Potion.class);
+            if (slot == null) {
+                flash("Aucune potion dans l'inventaire.");
+                return;
+            }
+
+            joueur.soigner(50);
+            joueur.getInventaire().retirerObjet(slot[0], slot[1]);
+            vueInventaire.setSelection(-1, -1);
+            flash("Potion bue ! (+50 PV)");
+        }
+
+        private void utiliserBombeRapide() {
+            int[] slot = trouverPremierObjetInventaire(com.fermedefense.modele.combat.Bombe.class);
+            if (slot == null) {
+                flash("Aucune bombe dans l'inventaire.");
+                return;
+            }
+            utiliserBombe(slot[0], slot[1]);
         }
     }
 
@@ -632,11 +713,18 @@ public class VuePrincipale extends JFrame {
 
     private void attaquerAvec(com.fermedefense.modele.combat.Arme arme) {
         if (arme == null) { flash("Aucune arme équipée !"); return; }
+        SoundManager.jouerClic();
         ControleurAttaque ca = controleurJeu.getControleurAttaque();
         ControleurCombat  cc = controleurJeu.getControleurCombat();
-        if (ca != null && ca.isEnCombat()) {
-            ca.getAttaqueCourante().frapperManuel(arme, upgrades.dommageMulti);
-            triggerHitEffet(ca.getAliensVisuels());
+        if (ca != null && ca.isActif()) {
+            Attaque att = ca.getAttaqueCourante();
+            if (att != null) {
+                // Autorise le joueur à frapper dès qu'une vague défendable est active.
+                att.frapperManuel(arme, upgrades.dommageMulti);
+                triggerHitEffet(ca.getAliensVisuels());
+            } else {
+                flash("Vous êtes hors ferme : impossible de défendre cette vague.");
+            }
         } else if (cc != null && cc.isEnCombat()) {
             cc.getAttaqueBoss().frapperManuel(arme, upgrades.dommageMulti);
             if (cc.getBossVisuel() != null) {
@@ -644,8 +732,8 @@ public class VuePrincipale extends JFrame {
                 vueEffetHit.trigger(camera.toScreenX(bv.getX()) + 48,
                         camera.toScreenY(bv.getY()) + 48, true);
             }
-        } else if ((ca != null && ca.isActif()) || (cc != null && cc.isActif())) {
-            flash("Alien trop loin ! Laissez-les approcher.");
+        } else if (cc != null && cc.isActif()) {
+            flash("Le boss est encore en approche.");
         } else {
             flash("Aucun alien à combattre !");
         }
@@ -668,6 +756,8 @@ public class VuePrincipale extends JFrame {
         partie.demarrer();
         joueur.soigner(joueur.getPointsDeVieMax());
         controleurJeu.initialiserNiveau(partie);
+        SoundManager.jouerJingle();
+        SoundManager.jouerThemeExploration();
         flash("Niveau " + partie.getNiveau() + " !");
     }
 
@@ -781,11 +871,12 @@ public class VuePrincipale extends JFrame {
                     flash("Arme : " + (eq != null ? eq.getNom() : "Aucune"));
                     break;
 
-                case KeyEvent.VK_P:
-                    if (partie.getEtat() == EtatJeu.EN_COURS) {
-                        partie.basculerPause();
-                        flash(partie.isEnPause() ? "PAUSE" : "Reprise !");
-                    }
+                case KeyEvent.VK_W:
+                    panneauJeu.utiliserPotionRapide();
+                    break;
+
+                case KeyEvent.VK_X:
+                    panneauJeu.utiliserBombeRapide();
                     break;
             }
         }

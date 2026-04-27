@@ -9,6 +9,7 @@ import com.fermedefense.modele.joueur.Joueur;
 import com.fermedefense.modele.marche.ArticleMarche;
 import com.fermedefense.modele.marche.Marche;
 import com.fermedefense.modele.marche.TypeArticle;
+import com.fermedefense.utilitaire.SoundManager;
 
 /**
  * Gère les interactions avec le marché :
@@ -94,6 +95,8 @@ public class ControleurMarche {
             joueur.getInventaire().ajouterObjet(new com.fermedefense.modele.combat.Bombe());
             dernierMessage = "Bombe achetée !";
         }
+
+        SoundManager.jouerClic();
 
         return ResultatAchat.OK;
     }
