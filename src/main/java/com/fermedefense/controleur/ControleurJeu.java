@@ -119,9 +119,15 @@ public class ControleurJeu {
         // 1. Joueur
         joueur.mettreAJour(delta);
         carte.clampJoueur(joueur);
+        if (joueur.isEnMouvement()) SoundManager.jouerPas();
+        else SoundManager.arreterPas();
 
         // 2. Ferme (croissance + production)
+        int productivesAvant = ferme.getNombreProductives();
         ferme.mettreAJour(delta);
+        if (ferme.getNombreProductives() > productivesAvant) {
+            SoundManager.jouerVacheProductive();
+        }
 
         // 2b. Action en cours du joueur
         if (actionEnCours != null) {
@@ -151,9 +157,9 @@ public class ControleurJeu {
             if (!controleurAttaque.isActif()) {
                 // Vague terminée
                 if (controleurAttaque.getResultat() == ResultatCombat.DEFAITE) {
+                    SoundManager.jouerGameOver();
                     partie.terminer(false);
                 } else if (controleurAttaque.getResultat() == ResultatCombat.VICTOIRE) {
-                    SoundManager.jouerJingle();
                     // Mettre à jour le score de la vague
                     com.fermedefense.modele.combat.Attaque att = controleurAttaque.getAttaqueCourante();
                     int nbAliens = att != null ? att.getAliens().size() : 0;
@@ -178,7 +184,6 @@ public class ControleurJeu {
             if (controleurCombat.isTermine()) {
                 boolean victoire = controleurCombat.getResultat() == ResultatCombat.VICTOIRE;
                 if (victoire) {
-                    SoundManager.jouerJingle();
                     com.fermedefense.modele.combat.Attaque attBoss = controleurCombat.getAttaqueBoss();
                     int degats = attBoss != null ? attBoss.getTotalDegatsInfliges() : 0;
                     partie.getScoreNiveau().enregistrerBossVaincu(degats);
@@ -198,6 +203,7 @@ public class ControleurJeu {
                 for (int i = 0; i < vachesPerdues; i++) {
                     partie.getScoreNiveau().enregistrerVachePerdue();
                 }
+                if (!victoire) SoundManager.jouerGameOver();
                 partie.terminer(victoire);
             }
             return;

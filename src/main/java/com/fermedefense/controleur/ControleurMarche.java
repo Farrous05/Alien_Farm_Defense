@@ -64,6 +64,7 @@ public class ControleurMarche {
 
         if (joueur.getMonnaie() < article.getPrix()) {
             dernierMessage = "Fonds insuffisants !";
+            SoundManager.jouerFondsInsuffisants();
             return ResultatAchat.FONDS_INSUFFISANTS;
         }
 
@@ -96,7 +97,7 @@ public class ControleurMarche {
             dernierMessage = "Bombe achetée !";
         }
 
-        SoundManager.jouerClic();
+        SoundManager.jouerAchatReussi();
 
         return ResultatAchat.OK;
     }

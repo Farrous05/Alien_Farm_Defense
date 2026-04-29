@@ -222,8 +222,7 @@ public class VuePrincipale extends JFrame {
         partie.demarrer();
         controleurJeu.initialiserNiveau(partie);
         controleurJeu.demarrer();
-        SoundManager.jouerJingle();
-        SoundManager.jouerThemeExploration();
+        SoundManager.jouerThemeJeu();
     }
 
     private void flash(String msg) {
@@ -274,7 +273,7 @@ public class VuePrincipale extends JFrame {
             // ── Récolte automatique ─────────────────────────────────────────
             int totalAuto = ferme.recolterTout();
             if (totalAuto > 0) joueur.ajouterMonnaie(totalAuto);
-            if (totalAuto > 0) SoundManager.jouerClic();
+            if (totalAuto > 0) SoundManager.jouerPieceDor();
 
             // ── Ferme (vaches) ──────────────────────────────────────────────
             vueFerme.dessiner(g2, camera);
@@ -481,6 +480,7 @@ public class VuePrincipale extends JFrame {
                 joueur.soigner(50);
                 joueur.getInventaire().retirerObjet(lig, col);
                 vueInventaire.setSelection(-1, -1);
+                SoundManager.jouerPotion();
                 flash("Potion bue ! (+50 PV)");
             } else if (obj instanceof com.fermedefense.modele.combat.Bombe) {
                 utiliserBombe(lig, col);
@@ -692,6 +692,7 @@ public class VuePrincipale extends JFrame {
             joueur.soigner(50);
             joueur.getInventaire().retirerObjet(slot[0], slot[1]);
             vueInventaire.setSelection(-1, -1);
+            SoundManager.jouerPotion();
             flash("Potion bue ! (+50 PV)");
         }
 
@@ -713,7 +714,7 @@ public class VuePrincipale extends JFrame {
 
     private void attaquerAvec(com.fermedefense.modele.combat.Arme arme) {
         if (arme == null) { flash("Aucune arme équipée !"); return; }
-        SoundManager.jouerClic();
+        SoundManager.jouerCoupArme();
         ControleurAttaque ca = controleurJeu.getControleurAttaque();
         ControleurCombat  cc = controleurJeu.getControleurCombat();
         if (ca != null && ca.isActif()) {
@@ -756,8 +757,7 @@ public class VuePrincipale extends JFrame {
         partie.demarrer();
         joueur.soigner(joueur.getPointsDeVieMax());
         controleurJeu.initialiserNiveau(partie);
-        SoundManager.jouerJingle();
-        SoundManager.jouerThemeExploration();
+        SoundManager.jouerThemeJeu();
         flash("Niveau " + partie.getNiveau() + " !");
     }
 

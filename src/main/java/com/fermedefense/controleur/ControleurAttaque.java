@@ -193,6 +193,7 @@ public class ControleurAttaque {
                             aliensVisuels.get(idxFui).setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
                         }
                     }
+                    SoundManager.jouerVacheVolee();
                     messageFlash = "Alerte : Un alien a volé une vache !";
                 }
 
@@ -220,6 +221,7 @@ public class ControleurAttaque {
                                 av.setEtat(AlienVisuel.EtatVisuel.ENLEVEMENT);
                             }
                         }
+                        SoundManager.jouerVacheVolee();
                         messageFlash = "Défaite : Une vache a été enlevée !";
                     }
                 }
@@ -241,6 +243,7 @@ public class ControleurAttaque {
                                 joueur.depenser(Math.min(30, joueur.getMonnaie()));
                             }
                         }
+                        SoundManager.jouerVacheVolee();
                         messageFlash = "Une vache a été enlevée !";
                     }
                     phase = PhaseAttaque.INACTIF;

@@ -51,21 +51,6 @@ public class VueFerme {
         }
     }
 
-    /** Rétrocompatibilité sans caméra (affichage en grille fixe, legacy). */
-    public void dessiner(Graphics2D g2, int zx, int zy, int zw, int zh) {
-        List<Vache> vaches = ferme.getVaches();
-        int cols  = 3;
-        int cellW = zw / cols;
-        int startY = zy + 40;
-        for (int i = 0; i < vaches.size(); i++) {
-            int col = i % cols;
-            int row = i / cols;
-            int cx  = zx + col * cellW + 10;
-            int cy  = startY + row * 80;
-            dessinerVache(g2, vaches.get(i), cx, cy);
-        }
-    }
-
     // ── Rendu d'une vache ────────────────────────────────────────────────────
 
     public static final int COW_SIZE = 96;

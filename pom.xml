@@ -22,6 +22,12 @@
             <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
+        <!-- MP3 decoder (pure Java, no AudioSystem SPI → no interference with WAV) -->
+        <dependency>
+            <groupId>javazoom</groupId>
+            <artifactId>jlayer</artifactId>
+            <version>1.0.1</version>
+        </dependency>
     </dependencies>
 
 </project>
